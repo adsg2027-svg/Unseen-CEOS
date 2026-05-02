@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  --color-primary-50: #FFF7ED;
+  --color-primary-100: #FFEDD5;
+  --color-primary-200: #FED7AA;
+  --color-primary-300: #FDBA74;
+  --color-primary-400: #FB923C;
+  --color-primary-500: #E97451;
+  --color-primary-600: #DC5F3C;
+  --color-primary-700: #C2410C;
+  --color-primary-800: #9A3412;
+  --color-primary-900: #7C2D12;
+
+  --color-amber-50: #FFFBEB;
+  --color-amber-100: #FEF3C7;
+  --color-amber-200: #FDE68A;
+  --color-amber-300: #FCD34D;
+  --color-amber-400: #FBBF24;
+  --color-amber-500: #F59E0B;
+
+  --color-warm-50: #FAFAF9;
+  --color-warm-100: #F5F5F4;
+  --color-warm-200: #E7E5E4;
+  --color-warm-300: #D6D3D1;
+  --color-warm-400: #A8A29E;
+  --color-warm-500: #78716C;
+  --color-warm-600: #57534E;
+  --color-warm-700: #44403C;
+  --color-warm-800: #292524;
+  --color-warm-900: #1C1917;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-warm-50);
+  color: var(--color-warm-900);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-warm-300) transparent;
+}
+
+/* ── Landing page animations ─────────────────────────────────── */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-48px) rotate(-3deg); }
+  to   { opacity: 1; transform: translateX(0)     rotate(-3deg); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(48px)  rotate(3deg); }
+  to   { opacity: 1; transform: translateX(0)     rotate(3deg); }
+}
+
+@keyframes floatLeft {
+  0%, 100% { transform: translateY(0px)   rotate(-3deg); }
+  50%       { transform: translateY(-14px) rotate(-3deg); }
+}
+
+@keyframes floatRight {
+  0%, 100% { transform: translateY(0px)   rotate(3deg); }
+  50%       { transform: translateY(-14px) rotate(3deg); }
+}
+
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(233,116,81,0); }
+  50%       { box-shadow: 0 0 32px 6px rgba(233,116,81,0.45); }
+}
+
+@keyframes badgePop {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Utility animation classes */
+.anim-fade-in-up       { animation: fadeInUp 0.7s ease both; }
+.anim-fade-in          { animation: fadeIn   0.6s ease both; }
+.anim-slide-in-left    { animation: slideInLeft  0.9s cubic-bezier(.22,.68,0,1.2) both; }
+.anim-slide-in-right   { animation: slideInRight 0.9s cubic-bezier(.22,.68,0,1.2) both; }
+.anim-float-left       { animation: floatLeft  5s ease-in-out infinite; }
+.anim-float-right      { animation: floatRight 5s ease-in-out 0.8s infinite; }
+.anim-glow             { animation: glowPulse 3s ease-in-out infinite; }
+.anim-badge-pop        { animation: badgePop  0.5s cubic-bezier(.22,.68,0,1.4) both; }
+.anim-count-up         { animation: countUp   0.7s ease both; }
+
+/* Delay helpers */
+.delay-100  { animation-delay: 0.10s; }
+.delay-200  { animation-delay: 0.20s; }
+.delay-300  { animation-delay: 0.30s; }
+.delay-400  { animation-delay: 0.40s; }
+.delay-500  { animation-delay: 0.50s; }
+.delay-600  { animation-delay: 0.60s; }
+.delay-700  { animation-delay: 0.70s; }
+.delay-800  { animation-delay: 0.80s; }
+.delay-900  { animation-delay: 0.90s; }
+.delay-1000 { animation-delay: 1.00s; }
+.delay-1100 { animation-delay: 1.10s; }
+.delay-1200 { animation-delay: 1.20s; }
+
