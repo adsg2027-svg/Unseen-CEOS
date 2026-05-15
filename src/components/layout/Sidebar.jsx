@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, LayoutDashboard, Target, Users, Lightbulb, Handshake, Info, X, Send, Bell, Building2 } from 'lucide-react';
+import { Home, LayoutDashboard, Target, Users, Lightbulb, Handshake, Info, X, Send, Bell, Building2, Presentation } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -14,11 +14,12 @@ const funderNav = [
 ];
 
 const ventureNav = [
-  { to: '/',            icon: Home,      label: 'Home'         },
-  { to: '/funders',     icon: Building2, label: 'Find Funders' },
-  { to: '/my-requests', icon: Send,      label: 'My Requests'  },
-  { to: '/builder',     icon: Lightbulb, label: 'Biz Builder'  },
-  { to: '/about',       icon: Info,      label: 'About'        },
+  { to: '/',            icon: Home,         label: 'Home'         },
+  { to: '/funders',     icon: Building2,    label: 'Find Funders' },
+  { to: '/my-requests', icon: Send,         label: 'My Requests'  },
+  { to: '/pitch-deck',  icon: Presentation, label: 'Pitch Deck'   },
+  { to: '/builder',     icon: Lightbulb,    label: 'Biz Builder'  },
+  { to: '/about',       icon: Info,         label: 'About'        },
 ];
 
 export default function Sidebar() {

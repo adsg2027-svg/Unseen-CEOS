@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { DataProvider } from './context/DataContext';
 import { AuthProvider } from './context/AuthContext';
+import { FormSchemaProvider } from './context/FormSchemaContext';
 import PrivateRoute from './components/auth/PrivateRoute';
 import Layout from './components/layout/Layout';
 import Landing from './pages/Landing';
@@ -20,11 +21,13 @@ import MyRequests from './pages/MyRequests';
 import FunderRequests from './pages/FunderRequests';
 import Admin from './pages/Admin';
 import MyProfile from './pages/MyProfile';
+import PitchDeck from './pages/PitchDeck';
 
 function App() {
   return (
     <AuthProvider>
       <DataProvider>
+        <FormSchemaProvider>
         <BrowserRouter>
           <Routes>
             {/* Public */}
@@ -55,6 +58,7 @@ function App() {
                   <Route path="/builder" element={<BusinessPlanBuilder />} />
                   <Route path="/funders" element={<FundersDirectory />} />
                   <Route path="/my-requests" element={<MyRequests />} />
+                  <Route path="/pitch-deck" element={<PitchDeck />} />
                 </Route>
                 
                 {/* Admin-only */}
@@ -68,6 +72,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
+        </FormSchemaProvider>
       </DataProvider>
     </AuthProvider>
   );

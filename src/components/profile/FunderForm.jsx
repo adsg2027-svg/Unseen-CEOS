@@ -1,44 +1,96 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { useFormSchema } from '../../context/FormSchemaContext';
+import { Loader2 } from 'lucide-react';
+
+function buildInitialFlat(schema, user, existing) {
+  const init = {};
+  schema.forEach(f => {
+    if (existing?.[f.key] !== undefined) {
+      init[f.key] = Array.isArray(existing[f.key])
+        ? existing[f.key].join(', ')
+        : String(existing[f.key]);
+    } else {
+      init[f.key] = f.type === 'select' ? (f.options?.[0] ?? '') : '';
+    }
+  });
+  if (!init.name && user?.displayName) init.name = user.displayName;
+  return init;
+}
+
+function DynamicField({ field, value, onChange, inputClass, labelClass }) {
+  const id = `field-${field.key}`;
+  return (
+    <div>
+      <label htmlFor={id} className={labelClass}>
+        {field.label}
+        {field.required
+          ? <span className="text-red-500 ml-0.5">*</span>
+          : <span className="text-warm-400 ml-1 font-normal text-[10px]">(optional)</span>}
+      </label>
+      {field.type === 'textarea' ? (
+        <textarea
+          id={id}
+          name={field.key}
+          value={value}
+          onChange={onChange}
+          required={field.required}
+          placeholder={field.placeholder}
+          rows={3}
+          className={inputClass}
+        />
+      ) : field.type === 'select' ? (
+        <select id={id} name={field.key} value={value} onChange={onChange} required={field.required} className={inputClass}>
+          {(field.options ?? []).map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+      ) : (
+        <input
+          id={id}
+          type={field.type === 'number' ? 'number' : 'text'}
+          name={field.key}
+          value={value}
+          onChange={onChange}
+          required={field.required}
+          placeholder={field.placeholder}
+          className={inputClass}
+        />
+      )}
+    </div>
+  );
+}
 
 export default function FunderForm({ user, onComplete, initialData }) {
-  const [formData, setFormData] = useState(initialData || {
-    name: user?.displayName || '',
-    organization: '',
-    about: '',
-    investmentRange: '',
-    preferredSectors: '',
-    fundingType: 'Grant',
-    pastInvestments: '',
-    website: '',
-    location: '',
-  });
+  const { funderSchema, schemasLoading } = useFormSchema();
+  const [flatData, setFlatData] = useState(() => buildInitialFlat(funderSchema, user, initialData));
+  const [loading, setLoading]  = useState(false);
 
   useEffect(() => {
-    if (initialData) {
-      setFormData(initialData);
-    }
-  }, [initialData]);
+    setFlatData(buildInitialFlat(funderSchema, user, initialData));
+  }, [funderSchema]);
 
-  const [loading, setLoading] = useState(false);
-
-  const handleChange = (e) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+  const handleChange = e => setFlatData(p => ({ ...p, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       if (!user) throw new Error('No user signed in');
-      
-      const payload = {
-        ...formData,
-        preferredSectors: formData.preferredSectors.split(',').map(s => s.trim()).filter(Boolean),
-        type: 'funder',
-        createdAt: new Date().toISOString()
-      };
+
+      const payload = {};
+      funderSchema.forEach(f => {
+        const raw = flatData[f.key] ?? '';
+        if (f.storeAsArray) {
+          payload[f.key] = raw.split(',').map(s => s.trim()).filter(Boolean);
+        } else if (f.type === 'number') {
+          payload[f.key] = Number(raw) || 0;
+        } else {
+          payload[f.key] = raw;
+        }
+      });
+
+      payload.type      = 'funder';
+      payload.createdAt = new Date().toISOString();
 
       await setDoc(doc(db, 'funders', user.uid), payload);
       onComplete();
@@ -50,56 +102,56 @@ export default function FunderForm({ user, onComplete, initialData }) {
     }
   };
 
-  const inputClass = "w-full bg-white border border-warm-200 rounded-lg px-3 py-2 text-sm text-warm-900 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all";
-  const labelClass = "block text-xs font-semibold text-warm-700 mb-1";
+  const inputClass = 'w-full bg-white border border-warm-200 rounded-lg px-3 py-2 text-sm text-warm-900 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all';
+  const labelClass = 'block text-xs font-semibold text-warm-700 mb-1';
+
+  if (schemasLoading) {
+    return (
+      <div className="flex h-48 items-center justify-center">
+        <Loader2 className="h-6 w-6 text-amber-500 animate-spin" />
+      </div>
+    );
+  }
+
+  const sorted   = [...funderSchema].sort((a, b) => a.order - b.order);
+  const sections = sorted.reduce((acc, f) => {
+    if (!acc[f.section]) acc[f.section] = [];
+    acc[f.section].push(f);
+    return acc;
+  }, {});
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 animate-fade-in text-left">
+    <form onSubmit={handleSubmit} className="space-y-6 text-left">
       <div className="text-center mb-6">
         <h2 className="text-xl font-bold text-warm-900">Funder Profile</h2>
         <p className="text-warm-500 text-sm mt-1">Tell ventures about what you look for</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div><label className={labelClass}>Full Name</label><input required name="name" value={formData.name} onChange={handleChange} className={inputClass} /></div>
-        <div><label className={labelClass}>Organization</label><input required name="organization" value={formData.organization} onChange={handleChange} className={inputClass} /></div>
-      </div>
-
-      <div>
-        <label className={labelClass}>About / Description</label>
-        <textarea required name="about" value={formData.about} onChange={handleChange} rows={3} className={inputClass} placeholder="Describe your organization and mission" />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div><label className={labelClass}>City / Location</label><input name="location" value={formData.location} onChange={handleChange} className={inputClass} /></div>
-        <div><label className={labelClass}>Website / LinkedIn</label><input name="website" value={formData.website} onChange={handleChange} className={inputClass} /></div>
-        <div>
-          <label className={labelClass}>Primary Funding Type</label>
-          <select name="fundingType" value={formData.fundingType} onChange={handleChange} className={inputClass}>
-            <option value="Grant">Grant</option>
-            <option value="Equity">Equity</option>
-            <option value="Debt / Loan">Debt / Loan</option>
-            <option value="Capacity Building">Capacity Building</option>
-          </select>
+      {Object.entries(sections).map(([section, sFields]) => (
+        <div key={section}>
+          <h3 className="text-xs font-bold text-warm-500 uppercase tracking-wider mb-3 border-b border-warm-100 pb-1">{section}</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {sFields.map(f => (
+              <div key={f.key} className={f.type === 'textarea' ? 'sm:col-span-2' : ''}>
+                <DynamicField
+                  field={f}
+                  value={flatData[f.key] ?? ''}
+                  onChange={handleChange}
+                  inputClass={inputClass}
+                  labelClass={labelClass}
+                />
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div><label className={labelClass}>Sectors of Interest (comma separated)</label><input required name="preferredSectors" value={formData.preferredSectors} onChange={handleChange} className={inputClass} placeholder="e.g. Healthcare, Tech" /></div>
-        <div><label className={labelClass}>Typical Ticket Size / Range</label><input required name="investmentRange" value={formData.investmentRange} onChange={handleChange} className={inputClass} placeholder="e.g. $10k - $50k" /></div>
-      </div>
-
-      <div>
-        <label className={labelClass}>Notable Past Investments (optional)</label>
-        <textarea name="pastInvestments" value={formData.pastInvestments} onChange={handleChange} rows={2} className={inputClass} placeholder="List startups or projects you've supported" />
-      </div>
+      ))}
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors mt-6"
+        className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors mt-4"
       >
-        {loading ? 'Saving Profile...' : 'Complete Profile'}
+        {loading ? 'Saving Profile…' : 'Complete Profile'}
       </button>
     </form>
   );

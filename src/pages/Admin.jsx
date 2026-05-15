@@ -5,12 +5,19 @@ import { entrepreneurs as mockEntrepreneurs } from '../data/mockData';
 import { parseCSVToEntrepreneurs, generateTemplateCSV } from '../utils/agencyScore';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
+import FormBuilder from '../components/admin/FormBuilder';
 import {
   Users, Upload, Database, Trash2, Edit3, X, Check,
-  FileText, Download, AlertCircle, CheckCircle, ShieldCheck,
+  FileText, Download, AlertCircle, CheckCircle, ShieldCheck, Settings2,
 } from 'lucide-react';
 
+const TABS = [
+  { id: 'users',   label: 'User Management', icon: Users },
+  { id: 'forms',   label: 'Form Builder',    icon: Settings2 },
+];
+
 export default function Admin() {
+  const [tab, setTab] = useState('users');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -191,6 +198,33 @@ export default function Admin() {
         </div>
       </div>
 
+      {/* Tab switcher */}
+      <div className="flex gap-2 anim-fade-in-up">
+        {TABS.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => setTab(id)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all
+              ${tab === id
+                ? 'bg-primary-500 text-white shadow-sm'
+                : 'bg-white border border-warm-200 text-warm-600 hover:border-primary-300 hover:text-primary-600'}`}
+          >
+            <Icon size={15} />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Form Builder tab ── */}
+      {tab === 'forms' && (
+        <Card title="Form Builder" icon={Settings2} subtitle="Configure the profile forms shown to new users" className="anim-fade-in-up">
+          <FormBuilder />
+        </Card>
+      )}
+
+      {/* ── User Management tab ── */}
+      {tab === 'users' && <>
+
       {/* Upload data section */}
       <Card title="Upload Entrepreneur Data" icon={Upload} className="anim-fade-in-up delay-100">
         <div
@@ -324,7 +358,9 @@ export default function Admin() {
         )}
       </Card>
 
-      {/* Edit modal */}
+      </> /* end users tab */}
+
+      {/* Edit modal — rendered outside tab so it survives tab switch mid-edit */}
       {editingUser && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg anim-fade-in-up">
