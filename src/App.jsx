@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { DataProvider } from './context/DataContext';
 import { AuthProvider } from './context/AuthContext';
 import { FormSchemaProvider } from './context/FormSchemaContext';
+import { LanguageProvider } from './context/LanguageContext';
 import PrivateRoute from './components/auth/PrivateRoute';
 import Layout from './components/layout/Layout';
 import Landing from './pages/Landing';
@@ -25,6 +26,7 @@ import PitchDeck from './pages/PitchDeck';
 
 function App() {
   return (
+    <LanguageProvider>
     <AuthProvider>
       <DataProvider>
         <FormSchemaProvider>
@@ -51,11 +53,11 @@ function App() {
                   <Route path="/profiles/:id" element={<EntrepreneurProfile />} />
                   <Route path="/matching" element={<Matching />} />
                   <Route path="/funder-requests" element={<FunderRequests />} />
+                  <Route path="/builder" element={<BusinessPlanBuilder />} />
                 </Route>
 
                 {/* Venture-only */}
                 <Route element={<PrivateRoute allowedTypes={['venture']} />}>
-                  <Route path="/builder" element={<BusinessPlanBuilder />} />
                   <Route path="/funders" element={<FundersDirectory />} />
                   <Route path="/my-requests" element={<MyRequests />} />
                   <Route path="/pitch-deck" element={<PitchDeck />} />
@@ -75,6 +77,7 @@ function App() {
         </FormSchemaProvider>
       </DataProvider>
     </AuthProvider>
+    </LanguageProvider>
   );
 }
 

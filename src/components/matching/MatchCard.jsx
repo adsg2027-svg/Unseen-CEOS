@@ -8,6 +8,7 @@ import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
 import { sendProfileInterest, getFunderSentConnections } from '../../utils/connections';
 import ConnectModal from '../connections/ConnectModal';
+import T from '../common/T';
 
 export default function MatchCard({ entrepreneur }) {
   const navigate = useNavigate();
@@ -67,15 +68,15 @@ export default function MatchCard({ entrepreneur }) {
         {/* Mini metrics */}
         <div className="grid grid-cols-3 gap-2 mt-3 mb-3">
           <div className="text-center">
-            <p className="text-xs text-warm-400">Score</p>
+            <p className="text-xs text-warm-400"><T>Score</T></p>
             <p className="text-sm font-bold text-warm-900">{entrepreneur.agencyScore.percentage}%</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-warm-400">Profit/mo</p>
+            <p className="text-xs text-warm-400"><T>Profit/mo</T></p>
             <p className="text-sm font-bold text-green-600">{formatINR(entrepreneur.monthlyProfit)}</p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-warm-400">Funding</p>
+            <p className="text-xs text-warm-400"><T>Funding</T></p>
             <p className="text-sm font-bold text-primary-600">{formatINR(entrepreneur.fundingNeeded)}</p>
           </div>
         </div>
@@ -101,14 +102,14 @@ export default function MatchCard({ entrepreneur }) {
             className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-primary-600 hover:bg-primary-50 py-2 rounded-lg transition-colors"
           >
             <Eye size={12} />
-            View Profile
+            <T>View Profile</T>
           </button>
           <button
             onClick={() => dispatch({ type: 'TOGGLE_SHORTLIST', payload: entrepreneur.id })}
             className="flex items-center justify-center gap-1.5 text-xs font-medium text-warm-500 hover:bg-warm-50 py-2 px-3 rounded-lg transition-colors"
           >
             <Star size={12} className={entrepreneur.isShortlisted ? 'fill-amber-400 text-amber-400' : ''} />
-            {entrepreneur.isShortlisted ? 'Saved' : 'Save'}
+            {entrepreneur.isShortlisted ? <T>Saved</T> : <T>Save</T>}
           </button>
           <button
             onClick={() => !connected && setModalOpen(true)}
@@ -120,7 +121,7 @@ export default function MatchCard({ entrepreneur }) {
               }`}
           >
             {connected ? <CheckCircle size={12} /> : <UserPlus size={12} />}
-            {connected ? 'Connected' : 'Connect'}
+            {connected ? <T>Connected</T> : <T>Connect</T>}
           </button>
         </div>
       </div>

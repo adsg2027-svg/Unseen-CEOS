@@ -3,6 +3,8 @@ import { Handshake, Search, SlidersHorizontal } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import FilterPanel from '../components/matching/FilterPanel';
 import MatchCard from '../components/matching/MatchCard';
+import T from '../components/common/T';
+import { useT } from '../components/common/T';
 
 const defaultFilters = {
   sectors: [],
@@ -16,6 +18,7 @@ export default function Matching() {
   const { entrepreneurs } = useData();
   const [filters, setFilters] = useState(defaultFilters);
   const [sortBy, setSortBy] = useState('score');
+  const tp = useT();
 
   function handleFilterChange(updates) {
     setFilters(prev => ({ ...prev, ...updates }));
@@ -46,17 +49,20 @@ export default function Matching() {
 
   return (
     <div>
-      {/* Gradient page header */}
       <div className="relative overflow-hidden bg-gradient-to-r from-primary-600 via-primary-500 to-amber-500 rounded-2xl p-6 mb-6 shadow-lg">
         <div className="absolute -top-6 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-20 h-20 bg-amber-200/20 rounded-full blur-xl pointer-events-none" />
         <div className="relative z-10 anim-fade-in-up">
           <div className="flex items-center gap-2 mb-1">
             <Handshake size={16} className="text-white/75" />
-            <p className="text-white/70 text-[11px] font-semibold uppercase tracking-widest">Investor View</p>
+            <p className="text-white/70 text-[11px] font-semibold uppercase tracking-widest">
+              <T>Investor View</T>
+            </p>
           </div>
-          <h1 className="text-2xl font-bold text-white">Investor Matching</h1>
-          <p className="text-white/70 text-sm mt-1">Shortlisted ventures aligned with funder criteria, backed by verified data</p>
+          <h1 className="text-2xl font-bold text-white"><T>Investor Matching</T></h1>
+          <p className="text-white/70 text-sm mt-1">
+            <T>Shortlisted ventures aligned with funder criteria, backed by verified data</T>
+          </p>
         </div>
       </div>
 
@@ -78,12 +84,12 @@ export default function Matching() {
                   type="text"
                   value={filters.searchQuery}
                   onChange={(e) => handleFilterChange({ searchQuery: e.target.value })}
-                  placeholder="Search by name..."
+                  placeholder={tp('Search by name...')}
                   className="text-sm bg-transparent outline-none w-full text-warm-700"
                 />
               </div>
               <span className="text-sm text-warm-400 whitespace-nowrap font-medium">
-                {filtered.length} match{filtered.length !== 1 ? 'es' : ''}
+                {filtered.length} {filtered.length !== 1 ? tp('matches') : tp('match')}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -93,10 +99,10 @@ export default function Matching() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="text-sm border border-warm-200 rounded-xl px-3 py-2 bg-white text-warm-700 shadow-sm"
               >
-                <option value="score">Highest Score</option>
-                <option value="funding">Lowest Funding</option>
-                <option value="profit">Highest Profit</option>
-                <option value="name">Alphabetical</option>
+                <option value="score">{tp('Highest Score')}</option>
+                <option value="funding">{tp('Lowest Funding')}</option>
+                <option value="profit">{tp('Highest Profit')}</option>
+                <option value="name">{tp('Alphabetical')}</option>
               </select>
             </div>
           </div>
@@ -114,8 +120,10 @@ export default function Matching() {
               <div className="w-16 h-16 bg-warm-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Handshake size={28} className="text-warm-300" />
               </div>
-              <p className="text-warm-600 font-semibold mb-1">No matches found</p>
-              <p className="text-warm-400 text-sm">Try adjusting your filters to see more entrepreneurs.</p>
+              <p className="text-warm-600 font-semibold mb-1"><T>No matches found</T></p>
+              <p className="text-warm-400 text-sm">
+                <T>Try adjusting your filters to see more entrepreneurs.</T>
+              </p>
             </div>
           )}
         </div>

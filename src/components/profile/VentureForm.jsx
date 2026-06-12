@@ -4,6 +4,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { useFormSchema } from '../../context/FormSchemaContext';
 import { calculateAgencyScore } from '../../utils/agencyScore';
 import { Loader2 } from 'lucide-react';
+import T from '../common/T';
 
 const AGENCY_PARAMS = [
   { key: 'pricingControl',       label: 'Pricing Control',        desc: 'Sets her own prices independently' },
@@ -33,10 +34,10 @@ function DynamicField({ field, value, onChange, inputClass, labelClass }) {
   return (
     <div>
       <label htmlFor={id} className={labelClass}>
-        {field.label}
+        <T>{field.label}</T>
         {field.required
           ? <span className="text-red-500 ml-0.5">*</span>
-          : <span className="text-warm-400 ml-1 font-normal text-[10px]">(optional)</span>}
+          : <span className="text-warm-400 ml-1 font-normal text-[10px]">(<T>optional</T>)</span>}
       </label>
       {field.type === 'textarea' ? (
         <textarea
@@ -77,7 +78,6 @@ export default function VentureForm({ user, onComplete, initialData }) {
   const [growthPlan, setGrowth]   = useState(initialData?.growthPlan ?? { shortTerm: '', mediumTerm: '', longTerm: '' });
   const [loading, setLoading]     = useState(false);
 
-  // Re-init flat fields whenever schema loads / changes
   useEffect(() => {
     setFlatData(buildInitialFlat(ventureSchema, user, initialData));
   }, [ventureSchema]);
@@ -90,7 +90,6 @@ export default function VentureForm({ user, onComplete, initialData }) {
     try {
       if (!user) throw new Error('No user signed in');
 
-      // Build payload from flat dynamic fields
       const payload = {};
       ventureSchema.forEach(f => {
         const raw = flatData[f.key] ?? '';
@@ -103,14 +102,11 @@ export default function VentureForm({ user, onComplete, initialData }) {
         }
       });
 
-      // Derived fields
       payload.monthlyProfit = (payload.monthlyRevenue ?? 0) - (payload.monthlyCosts ?? 0);
 
-      // Agency score
       const score = calculateAgencyScore(agencyScore);
       payload.agencyScore = { ...agencyScore, total: score.total, percentage: score.percentage };
 
-      // Unit economics
       const up = Number(unitEcon.unitPrice) || 0;
       const uc = Number(unitEcon.unitCost)  || 0;
       payload.unitEconomics = {
@@ -121,10 +117,8 @@ export default function VentureForm({ user, onComplete, initialData }) {
         marginPerUnit: up - uc,
       };
 
-      // Growth plan
       payload.growthPlan = growthPlan;
 
-      // Metadata
       payload.interviewDate  = new Date().toISOString().split('T')[0];
       payload.interviewedBy  = 'Self Registered';
       payload.isShortlisted  = initialData?.isShortlisted ?? false;
@@ -152,7 +146,6 @@ export default function VentureForm({ user, onComplete, initialData }) {
     );
   }
 
-  // Group dynamic fields by section
   const sorted   = [...ventureSchema].sort((a, b) => a.order - b.order);
   const sections = sorted.reduce((acc, f) => {
     if (!acc[f.section]) acc[f.section] = [];
@@ -163,14 +156,13 @@ export default function VentureForm({ user, onComplete, initialData }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 text-left">
       <div className="text-center mb-6">
-        <h2 className="text-xl font-bold text-warm-900">Venture Profile</h2>
-        <p className="text-warm-500 text-sm mt-1">Tell us about yourself and your business</p>
+        <h2 className="text-xl font-bold text-warm-900"><T>Venture Profile</T></h2>
+        <p className="text-warm-500 text-sm mt-1"><T>Tell us about yourself and your business</T></p>
       </div>
 
-      {/* Dynamic sections */}
       {Object.entries(sections).map(([section, sFields]) => (
         <div key={section}>
-          <h3 className="text-xs font-bold text-warm-500 uppercase tracking-wider mb-3 border-b border-warm-100 pb-1">{section}</h3>
+          <h3 className="text-xs font-bold text-warm-500 uppercase tracking-wider mb-3 border-b border-warm-100 pb-1"><T>{section}</T></h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {sFields.map(f => (
               <div key={f.key} className={f.type === 'textarea' ? 'sm:col-span-2' : ''}>
@@ -187,55 +179,58 @@ export default function VentureForm({ user, onComplete, initialData }) {
         </div>
       ))}
 
-      {/* Hardcoded: Unit Economics */}
       <div>
-        <h3 className="text-xs font-bold text-warm-500 uppercase tracking-wider mb-3 border-b border-warm-100 pb-1">Unit Economics</h3>
+        <h3 className="text-xs font-bold text-warm-500 uppercase tracking-wider mb-3 border-b border-warm-100 pb-1"><T>Unit Economics</T></h3>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div className="sm:col-span-2">
-            <label className={labelClass}>Main Product / Service<span className="text-red-500 ml-0.5">*</span></label>
+            <label className={labelClass}><T>Main Product / Service</T><span className="text-red-500 ml-0.5">*</span></label>
             <input required value={unitEcon.productName} onChange={e => setUnitEcon(p => ({ ...p, productName: e.target.value }))} className={inputClass} placeholder="e.g. Tiffin meals" />
           </div>
           <div>
-            <label className={labelClass}>Price per Unit (₹)<span className="text-red-500 ml-0.5">*</span></label>
+            <label className={labelClass}><T>Price per Unit (₹)</T><span className="text-red-500 ml-0.5">*</span></label>
             <input type="number" required value={unitEcon.unitPrice} onChange={e => setUnitEcon(p => ({ ...p, unitPrice: e.target.value }))} className={inputClass} />
           </div>
           <div>
-            <label className={labelClass}>Cost per Unit (₹)<span className="text-red-500 ml-0.5">*</span></label>
+            <label className={labelClass}><T>Cost per Unit (₹)</T><span className="text-red-500 ml-0.5">*</span></label>
             <input type="number" required value={unitEcon.unitCost} onChange={e => setUnitEcon(p => ({ ...p, unitCost: e.target.value }))} className={inputClass} />
           </div>
           <div>
-            <label className={labelClass}>Units / Day <span className="text-warm-400 ml-1 font-normal text-[10px]">(optional)</span></label>
+            <label className={labelClass}><T>Units / Day</T> <span className="text-warm-400 ml-1 font-normal text-[10px]">(<T>optional</T>)</span></label>
             <input type="number" value={unitEcon.dailyUnits} onChange={e => setUnitEcon(p => ({ ...p, dailyUnits: e.target.value }))} className={inputClass} />
           </div>
         </div>
       </div>
 
-      {/* Hardcoded: Growth Plan */}
       <div>
-        <h3 className="text-xs font-bold text-warm-500 uppercase tracking-wider mb-3 border-b border-warm-100 pb-1">Growth Plan <span className="text-warm-400 font-normal normal-case tracking-normal text-[11px]">(optional)</span></h3>
+        <h3 className="text-xs font-bold text-warm-500 uppercase tracking-wider mb-3 border-b border-warm-100 pb-1">
+          <T>Growth Plan</T> <span className="text-warm-400 font-normal normal-case tracking-normal text-[11px]">(<T>optional</T>)</span>
+        </h3>
         <div className="grid grid-cols-1 gap-3">
-          {['shortTerm', 'mediumTerm', 'longTerm'].map(k => (
-            <div key={k}>
-              <label className={labelClass}>{{ shortTerm: 'Short-term (3 months)', mediumTerm: 'Mid-term (6–12 months)', longTerm: 'Long-term (2–3 years)' }[k]}</label>
-              <input value={growthPlan[k]} onChange={e => setGrowth(p => ({ ...p, [k]: e.target.value }))} className={inputClass} />
+          {[
+            { key: 'shortTerm',  labelKey: 'Short-term (3 months)'   },
+            { key: 'mediumTerm', labelKey: 'Mid-term (6–12 months)'  },
+            { key: 'longTerm',   labelKey: 'Long-term (2–3 years)'   },
+          ].map(({ key, labelKey }) => (
+            <div key={key}>
+              <label className={labelClass}><T>{labelKey}</T></label>
+              <input value={growthPlan[key]} onChange={e => setGrowth(p => ({ ...p, [key]: e.target.value }))} className={inputClass} />
             </div>
           ))}
         </div>
       </div>
 
-      {/* Hardcoded: Agency Self-Reflection */}
       <div>
-        <h3 className="text-xs font-bold text-warm-500 uppercase tracking-wider mb-1 border-b border-warm-100 pb-1">Agency Self-Reflection</h3>
-        <p className="text-xs text-warm-400 mb-3">Rate yourself 1–5 on each dimension of business autonomy</p>
+        <h3 className="text-xs font-bold text-warm-500 uppercase tracking-wider mb-1 border-b border-warm-100 pb-1"><T>Agency Self-Reflection</T></h3>
+        <p className="text-xs text-warm-400 mb-3"><T>Rate yourself 1–5 on each dimension of business autonomy</T></p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {AGENCY_PARAMS.map(({ key, label, desc }) => (
             <div key={key} className={key === 'digitalSkills' ? 'sm:col-span-2' : ''}>
               <label className={labelClass}>
-                {label}
+                <T>{label}</T>
                 <span className="ml-2 font-black text-primary-500">{agencyScore[key]}</span>
                 <span className="ml-1 text-warm-400 font-normal">/ 5</span>
               </label>
-              <p className="text-[11px] text-warm-400 mb-1">{desc}</p>
+              <p className="text-[11px] text-warm-400 mb-1"><T>{desc}</T></p>
               <input
                 type="range" min="1" max="5" step="1"
                 value={agencyScore[key]}
@@ -252,7 +247,7 @@ export default function VentureForm({ user, onComplete, initialData }) {
         disabled={loading}
         className="w-full bg-primary-500 hover:bg-primary-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors mt-4"
       >
-        {loading ? 'Saving Profile…' : 'Complete Profile'}
+        {loading ? <T>Saving Profile…</T> : <T>Complete Profile</T>}
       </button>
     </form>
   );

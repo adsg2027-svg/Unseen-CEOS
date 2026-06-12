@@ -2,6 +2,7 @@ import { Users, Target, IndianRupee, Star, TrendingUp, Sparkles, BookMarked } fr
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
 import { formatINR } from '../../utils/agencyScore';
+import T from '../common/T';
 
 export default function StatsCards() {
   const { summaryStats } = useData();
@@ -9,7 +10,7 @@ export default function StatsCards() {
 
   const funderCards = [
     {
-      label: 'Entrepreneurs Available',
+      labelKey: 'Entrepreneurs Available',
       value: summaryStats.total,
       icon: Users,
       gradient: 'from-primary-500 to-primary-600',
@@ -19,7 +20,7 @@ export default function StatsCards() {
       delay: '',
     },
     {
-      label: 'High Agency Score',
+      labelKey: 'High Agency Score',
       value: summaryStats.highAgency,
       icon: Sparkles,
       gradient: 'from-amber-400 to-amber-500',
@@ -27,10 +28,10 @@ export default function StatsCards() {
       border: 'border-amber-100',
       text: 'text-amber-600',
       delay: 'delay-100',
-      sub: '≥ 76% agency score',
+      subKey: '≥ 76% agency score',
     },
     {
-      label: 'Total Funding Gap',
+      labelKey: 'Total Funding Gap',
       value: formatINR(summaryStats.totalFunding),
       icon: IndianRupee,
       gradient: 'from-green-500 to-emerald-600',
@@ -38,10 +39,10 @@ export default function StatsCards() {
       border: 'border-green-100',
       text: 'text-green-600',
       delay: 'delay-200',
-      sub: 'across all entrepreneurs',
+      subKey: 'across all entrepreneurs',
     },
     {
-      label: 'Your Shortlist',
+      labelKey: 'Your Shortlist',
       value: summaryStats.shortlisted,
       icon: BookMarked,
       gradient: 'from-purple-500 to-purple-600',
@@ -54,7 +55,7 @@ export default function StatsCards() {
 
   const defaultCards = [
     {
-      label: 'Total Entrepreneurs',
+      labelKey: 'Total Entrepreneurs',
       value: summaryStats.total,
       icon: Users,
       gradient: 'from-primary-500 to-primary-600',
@@ -64,7 +65,7 @@ export default function StatsCards() {
       delay: '',
     },
     {
-      label: 'Avg Agency Score',
+      labelKey: 'Avg Agency Score',
       value: `${summaryStats.avgAgencyScore}%`,
       icon: Target,
       gradient: 'from-amber-400 to-amber-500',
@@ -74,7 +75,7 @@ export default function StatsCards() {
       delay: 'delay-100',
     },
     {
-      label: 'Total Funding Needed',
+      labelKey: 'Total Funding Needed',
       value: formatINR(summaryStats.totalFunding),
       icon: IndianRupee,
       gradient: 'from-green-500 to-emerald-600',
@@ -84,7 +85,7 @@ export default function StatsCards() {
       delay: 'delay-200',
     },
     {
-      label: 'Shortlisted',
+      labelKey: 'Shortlisted',
       value: summaryStats.shortlisted,
       icon: Star,
       gradient: 'from-purple-500 to-purple-600',
@@ -104,7 +105,6 @@ export default function StatsCards() {
           key={i}
           className={`anim-fade-in-up ${card.delay} relative overflow-hidden ${card.bg} border ${card.border} rounded-2xl p-4 lg:p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group`}
         >
-          {/* Subtle gradient accent top bar */}
           <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${card.gradient} rounded-t-2xl`} />
 
           <div className="flex items-center justify-between mb-3">
@@ -115,8 +115,8 @@ export default function StatsCards() {
           </div>
 
           <p className="text-2xl lg:text-3xl font-black text-warm-900">{card.value}</p>
-          <p className="text-xs text-warm-500 mt-1 font-medium">{card.label}</p>
-          {card.sub && <p className="text-[10px] text-warm-400 mt-0.5">{card.sub}</p>}
+          <p className="text-xs text-warm-500 mt-1 font-medium"><T>{card.labelKey}</T></p>
+          {card.subKey && <p className="text-[10px] text-warm-400 mt-0.5"><T>{card.subKey}</T></p>}
         </div>
       ))}
     </div>

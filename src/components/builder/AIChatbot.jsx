@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Send, X, Minimize2, Maximize2, Loader2, AlertCircle } from 'lucide-react';
-import { sendMessage, isApiKeyConfigured } from '../../utils/gemini';
+import { Sparkles, Send, X, Minimize2, Maximize2, Loader2, AlertCircle, TrendingUp } from 'lucide-react';
+import { sendMessage, isApiKeyConfigured, analyzeStrengthsWeaknesses } from '../../utils/gemini';
 import MarkdownRenderer from '../common/MarkdownRenderer';
 
 const QUICK_PROMPTS = [
@@ -38,6 +38,23 @@ export default function AIChatbot({ entrepreneur, isOpen, onToggle }) {
     const history = messages.map(m => ({ role: m.role, content: m.content }));
     const result = await sendMessage(text.trim(), history, entrepreneur);
 
+    if (result.success) {
+      setMessages(prev => [...prev, { role: 'model', content: result.data, timestamp: Date.now() }]);
+    } else {
+      setMessages(prev => [...prev, { role: 'error', content: result.error, timestamp: Date.now() }]);
+    }
+    setIsLoading(false);
+  }
+
+  async function handleStrengthsWeaknesses() {
+    if (isLoading) return;
+    if (!entrepreneur) {
+      setMessages(prev => [...prev, { role: 'error', content: 'Please select an entrepreneur first.', timestamp: Date.now() }]);
+      return;
+    }
+    setMessages(prev => [...prev, { role: 'user', content: 'Analyze my key strengths & weaknesses', timestamp: Date.now() }]);
+    setIsLoading(true);
+    const result = await analyzeStrengthsWeaknesses(entrepreneur);
     if (result.success) {
       setMessages(prev => [...prev, { role: 'model', content: result.data, timestamp: Date.now() }]);
     } else {
@@ -105,10 +122,18 @@ export default function AIChatbot({ entrepreneur, isOpen, onToggle }) {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.length === 0 && (
-              <div className="text-center py-8">
+              <div className="text-center py-6">
                 <Sparkles size={28} className="mx-auto text-primary-300 mb-3" />
                 <p className="text-sm text-warm-500 mb-4">Ask me anything about business planning!</p>
-                <div className="space-y-2">
+                {/* Strengths & Weaknesses analysis button */}
+                <button
+                  onClick={handleStrengthsWeaknesses}
+                  className="w-full flex items-center gap-2 text-xs bg-gradient-to-r from-primary-50 to-amber-50 hover:from-primary-100 hover:to-amber-100 border border-primary-200 text-primary-700 px-3 py-2.5 rounded-lg transition-colors mb-3 font-medium"
+                >
+                  <TrendingUp size={13} className="text-primary-500 shrink-0" />
+                  Analyze my strengths &amp; weaknesses
+                </button>
+                <div className="space-y-1.5">
                   {QUICK_PROMPTS.map((prompt, i) => (
                     <button
                       key={i}

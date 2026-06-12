@@ -5,6 +5,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import VentureForm from '../components/profile/VentureForm';
 import FunderForm from '../components/profile/FunderForm';
 import { Loader2 } from 'lucide-react';
+import T from '../components/common/T';
 
 export default function MyProfile() {
   const { user, userType } = useAuth();
@@ -18,14 +19,13 @@ export default function MyProfile() {
         setLoading(false);
         return;
       }
-      
+
       const collectionName = userType === 'venture' ? 'entrepreneurs' : 'funders';
       const docRef = doc(db, collectionName, user.uid);
       const snap = await getDoc(docRef);
-      
+
       if (snap.exists()) {
         const data = snap.data();
-        // Convert to string for forms
         if (data.currentFundingSources && Array.isArray(data.currentFundingSources)) {
           data.currentFundingSources = data.currentFundingSources.join(', ');
         }
@@ -59,10 +59,10 @@ export default function MyProfile() {
     <div className="max-w-3xl mx-auto px-4 py-8">
       {successMsg && (
         <div className="mb-6 p-4 bg-green-50 text-green-700 border border-green-200 rounded-lg font-medium text-sm text-center shadow-sm">
-          {successMsg}
+          <T>{successMsg}</T>
         </div>
       )}
-      
+
       <div className="bg-white rounded-2xl shadow-sm border border-warm-200 p-6 md:p-8">
         {userType === 'venture' ? (
           <VentureForm user={user} onComplete={handleComplete} initialData={profileData} />

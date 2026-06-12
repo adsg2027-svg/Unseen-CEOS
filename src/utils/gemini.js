@@ -8,7 +8,13 @@ Rules you must follow in every response:
 - Lead with the single most important number or insight
 - All amounts in ₹ (INR)
 - Skip greetings, closings, and filler phrases
-- Be direct and practical — informal economy context (SHGs, MUDRA, Udyam)`;
+- Be direct and practical — informal economy context (SHGs, MUDRA, Udyam)
+
+For strengths & weaknesses analysis:
+- List 3 KEY STRENGTHS based on revenue, agency score, sector, and growth indicators
+- List 3 KEY WEAKNESSES or risk areas based on low scores, funding gaps, or market challenges
+- Format clearly with "💪 Strengths:" and "⚠️ Weaknesses:" headers
+- Each point must be specific to the entrepreneur's actual data, not generic`;
 
 let genAI = null;
 let model = null;
@@ -78,6 +84,20 @@ Challenges: ${entrepreneurContext.challenges?.join(', ')}`;
     }
     return { success: false, error: 'Failed to get a response. Please try again.' };
   }
+}
+
+export async function analyzeStrengthsWeaknesses(entrepreneur) {
+  if (!entrepreneur) return { success: false, error: 'No entrepreneur data provided.' };
+
+  const prompt = `Analyze key strengths and weaknesses for ${entrepreneur.name}'s business "${entrepreneur.businessName}" (${entrepreneur.sector}) in ${entrepreneur.location}.
+Data: Revenue ₹${entrepreneur.monthlyRevenue?.toLocaleString('en-IN')}/mo, Profit ₹${entrepreneur.monthlyProfit?.toLocaleString('en-IN')}/mo, Agency Score ${entrepreneur.agencyScore?.percentage ?? 'N/A'}%, Funding needed ₹${entrepreneur.fundingNeeded?.toLocaleString('en-IN')} for ${entrepreneur.fundingPurpose}, Years in business: ${entrepreneur.yearsInBusiness}.
+
+Give exactly:
+💪 Strengths: (3 bullets, specific to her data)
+⚠️ Weaknesses: (3 bullets, specific gaps or risks)
+Max 130 words total.`;
+
+  return sendMessage(prompt);
 }
 
 export async function generateBusinessPlanSection(entrepreneur, sectionType) {

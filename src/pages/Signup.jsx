@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff, AlertCircle, TrendingUp, Handshake } from 'lucide-react';
+import T from '../components/common/T';
 
 const USER_TYPES = [
   {
     value: 'venture',
-    label: 'Venture',
+    label: 'Entrepreneur',
     description: 'I am a woman entrepreneur looking to grow my business and access resources.',
     icon: TrendingUp,
     color: 'primary',
@@ -43,7 +44,7 @@ export default function Signup() {
     setLoading(true);
     try {
       await signup(email, password, displayName, userType);
-      navigate(userType === 'venture' ? '/funders' : '/dashboard');
+      navigate('/select-role');
     } catch (err) {
       setError(friendlyError(err.code));
     } finally {
@@ -69,7 +70,6 @@ export default function Signup() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-amber-700 flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
@@ -77,18 +77,17 @@ export default function Signup() {
             </div>
             <h1 className="text-2xl font-bold text-white">The Unseen CEOs</h1>
           </div>
-          <p className="text-primary-200 text-sm">Create your account</p>
+          <p className="text-primary-200 text-sm"><T>Create your account</T></p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           {error && (
             <div className="mb-5 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
               <AlertCircle size={16} className="shrink-0 mt-0.5" />
-              {error}
+              <T>{error}</T>
             </div>
           )}
 
-          {/* Google Sign-Up */}
           <button
             type="button"
             onClick={handleGoogle}
@@ -100,19 +99,18 @@ export default function Signup() {
             ) : (
               <GoogleIcon />
             )}
-            Continue with Google
+            <T>Continue with Google</T>
           </button>
 
           <div className="flex items-center gap-3 mb-5">
             <div className="flex-1 h-px bg-warm-200" />
-            <span className="text-xs text-warm-400">or sign up with email</span>
+            <span className="text-xs text-warm-400"><T>or sign up with email</T></span>
             <div className="flex-1 h-px bg-warm-200" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* User type selection */}
             <div>
-              <label className="block text-sm font-medium text-warm-700 mb-2">I am a…</label>
+              <label className="block text-sm font-medium text-warm-700 mb-2"><T>I am a…</T></label>
               <div className="grid grid-cols-2 gap-3">
                 {USER_TYPES.map(({ value, label, description, icon: Icon, color }) => {
                   const selected = userType === value;
@@ -138,9 +136,9 @@ export default function Signup() {
                       </div>
                       <div>
                         <p className={`text-sm font-semibold ${selected ? (color === 'primary' ? 'text-primary-700' : 'text-amber-700') : 'text-warm-800'}`}>
-                          {label}
+                          <T>{label}</T>
                         </p>
-                        <p className="text-xs text-warm-500 mt-0.5 leading-snug">{description}</p>
+                        <p className="text-xs text-warm-500 mt-0.5 leading-snug"><T>{description}</T></p>
                       </div>
                     </button>
                   );
@@ -149,7 +147,7 @@ export default function Signup() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-warm-700 mb-1.5">Full Name</label>
+              <label className="block text-sm font-medium text-warm-700 mb-1.5"><T>Full Name</T></label>
               <input
                 type="text"
                 required
@@ -161,7 +159,7 @@ export default function Signup() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-warm-700 mb-1.5">Email</label>
+              <label className="block text-sm font-medium text-warm-700 mb-1.5"><T>Email</T></label>
               <input
                 type="email"
                 required
@@ -173,7 +171,7 @@ export default function Signup() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-warm-700 mb-1.5">Password</label>
+              <label className="block text-sm font-medium text-warm-700 mb-1.5"><T>Password</T></label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -194,7 +192,7 @@ export default function Signup() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-warm-700 mb-1.5">Confirm Password</label>
+              <label className="block text-sm font-medium text-warm-700 mb-1.5"><T>Confirm Password</T></label>
               <input
                 type="password"
                 required
@@ -210,14 +208,14 @@ export default function Signup() {
               disabled={loading || googleLoading}
               className="w-full bg-primary-500 hover:bg-primary-600 disabled:opacity-60 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors"
             >
-              {loading ? 'Creating account…' : 'Create Account'}
+              {loading ? <T>Creating account…</T> : <T>Create Account</T>}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-warm-500">
-            Already have an account?{' '}
+            <T>Already have an account?</T>{' '}
             <Link to="/login" className="text-primary-600 font-medium hover:text-primary-700">
-              Sign in
+              <T>Sign in</T>
             </Link>
           </p>
         </div>

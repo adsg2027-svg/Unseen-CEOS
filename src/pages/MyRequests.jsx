@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { Send, Inbox, Clock, CheckCircle, XCircle, Loader, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getVentureOutgoingRequests, getVentureIncomingConnections } from '../utils/connections';
+import T from '../components/common/T';
 
 const STATUS_CONFIG = {
-  pending:  { label: 'Pending',  icon: Clock,         color: 'text-amber-600  bg-amber-50  border-amber-200' },
-  accepted: { label: 'Accepted', icon: CheckCircle,   color: 'text-green-600  bg-green-50  border-green-200' },
-  declined: { label: 'Declined', icon: XCircle,       color: 'text-red-500    bg-red-50    border-red-200' },
+  pending:  { labelKey: 'Pending',  icon: Clock,       color: 'text-amber-600  bg-amber-50  border-amber-200' },
+  accepted: { labelKey: 'Accepted', icon: CheckCircle, color: 'text-green-600  bg-green-50  border-green-200' },
+  declined: { labelKey: 'Declined', icon: XCircle,     color: 'text-red-500    bg-red-50    border-red-200'   },
 };
 
 function StatusBadge({ status }) {
@@ -15,7 +16,7 @@ function StatusBadge({ status }) {
   return (
     <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border ${cfg.color}`}>
       <Icon size={11} />
-      {cfg.label}
+      <T>{cfg.labelKey}</T>
     </span>
   );
 }
@@ -26,7 +27,7 @@ function EmptyState({ icon: Icon, message }) {
       <div className="w-14 h-14 bg-warm-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
         <Icon size={24} className="text-warm-300" />
       </div>
-      <p className="text-warm-500 text-sm">{message}</p>
+      <p className="text-warm-500 text-sm"><T>{message}</T></p>
     </div>
   );
 }
@@ -75,21 +76,22 @@ export default function MyRequests() {
         <div className="relative z-10 anim-fade-in-up">
           <div className="flex items-center gap-2 mb-1">
             <Send size={16} className="text-white/75" />
-            <p className="text-white/70 text-[11px] font-semibold uppercase tracking-widest">Your Activity</p>
+            <p className="text-white/70 text-[11px] font-semibold uppercase tracking-widest">
+              <T>Your Activity</T>
+            </p>
           </div>
-          <h1 className="text-2xl font-bold text-white">My Requests & Connections</h1>
+          <h1 className="text-2xl font-bold text-white"><T>My Requests &amp; Connections</T></h1>
           <p className="text-white/70 text-sm mt-1">
-            Track your funding requests and see when funders reach out to you
+            <T>Track your funding requests and see when funders reach out to you</T>
           </p>
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-1 bg-warm-100 rounded-xl p-1 mb-6 w-fit">
         {[
-          { key: 'outgoing', label: 'Funding Requests', count: outgoing.length, icon: Send },
-          { key: 'incoming', label: 'Funder Connections', count: incoming.length, icon: Inbox },
-        ].map(({ key, label, count, icon: Icon }) => (
+          { key: 'outgoing', labelKey: 'Funding Requests',  count: outgoing.length, icon: Send  },
+          { key: 'incoming', labelKey: 'Funder Connections', count: incoming.length, icon: Inbox },
+        ].map(({ key, labelKey, count, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
@@ -97,7 +99,7 @@ export default function MyRequests() {
               ${tab === key ? 'bg-white text-warm-900 shadow-sm' : 'text-warm-500 hover:text-warm-700'}`}
           >
             <Icon size={14} />
-            {label}
+            <T>{labelKey}</T>
             <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center
               ${tab === key ? 'bg-primary-100 text-primary-600' : 'bg-warm-200 text-warm-500'}`}>
               {count}
@@ -115,13 +117,13 @@ export default function MyRequests() {
           <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
             <AlertCircle size={26} className="text-red-500" />
           </div>
-          <p className="text-warm-700 font-semibold mb-1">Couldn't load your requests</p>
+          <p className="text-warm-700 font-semibold mb-1"><T>Couldn't load your requests</T></p>
           <p className="text-warm-400 text-sm mb-4 max-w-md mx-auto break-words">{loadError}</p>
           <button
             onClick={() => window.location.reload()}
             className="bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
           >
-            Retry
+            <T>Retry</T>
           </button>
         </div>
       ) : tab === 'outgoing' ? (
@@ -133,7 +135,7 @@ export default function MyRequests() {
               <div key={req.id} className="bg-white rounded-xl border border-warm-200 shadow-sm p-4">
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div>
-                    <p className="text-sm font-semibold text-warm-900">To: {req.toName}</p>
+                    <p className="text-sm font-semibold text-warm-900"><T>To:</T> {req.toName}</p>
                     <p className="text-xs text-warm-400 mt-0.5">{timeAgo(req.createdAt)}</p>
                   </div>
                   <StatusBadge status={req.status} />
@@ -154,9 +156,9 @@ export default function MyRequests() {
               <div key={conn.id} className="bg-white rounded-xl border border-warm-200 shadow-sm p-4">
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div>
-                    <p className="text-sm font-semibold text-warm-900">From: {conn.fromName}</p>
+                    <p className="text-sm font-semibold text-warm-900"><T>From:</T> {conn.fromName}</p>
                     <span className="text-[10px] font-semibold bg-amber-50 text-amber-600 border border-amber-200 px-2 py-0.5 rounded-full">
-                      Funder
+                      <T>Funder</T>
                     </span>
                     <p className="text-xs text-warm-400 mt-1">{timeAgo(conn.createdAt)}</p>
                   </div>

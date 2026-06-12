@@ -3,6 +3,7 @@ import { db } from '../../firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { useFormSchema } from '../../context/FormSchemaContext';
 import { Loader2 } from 'lucide-react';
+import T from '../common/T';
 
 function buildInitialFlat(schema, user, existing) {
   const init = {};
@@ -24,10 +25,10 @@ function DynamicField({ field, value, onChange, inputClass, labelClass }) {
   return (
     <div>
       <label htmlFor={id} className={labelClass}>
-        {field.label}
+        <T>{field.label}</T>
         {field.required
           ? <span className="text-red-500 ml-0.5">*</span>
-          : <span className="text-warm-400 ml-1 font-normal text-[10px]">(optional)</span>}
+          : <span className="text-warm-400 ml-1 font-normal text-[10px]">(<T>optional</T>)</span>}
       </label>
       {field.type === 'textarea' ? (
         <textarea
@@ -123,13 +124,13 @@ export default function FunderForm({ user, onComplete, initialData }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 text-left">
       <div className="text-center mb-6">
-        <h2 className="text-xl font-bold text-warm-900">Funder Profile</h2>
-        <p className="text-warm-500 text-sm mt-1">Tell ventures about what you look for</p>
+        <h2 className="text-xl font-bold text-warm-900"><T>Funder Profile</T></h2>
+        <p className="text-warm-500 text-sm mt-1"><T>Tell ventures about what you look for</T></p>
       </div>
 
       {Object.entries(sections).map(([section, sFields]) => (
         <div key={section}>
-          <h3 className="text-xs font-bold text-warm-500 uppercase tracking-wider mb-3 border-b border-warm-100 pb-1">{section}</h3>
+          <h3 className="text-xs font-bold text-warm-500 uppercase tracking-wider mb-3 border-b border-warm-100 pb-1"><T>{section}</T></h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {sFields.map(f => (
               <div key={f.key} className={f.type === 'textarea' ? 'sm:col-span-2' : ''}>
@@ -151,7 +152,7 @@ export default function FunderForm({ user, onComplete, initialData }) {
         disabled={loading}
         className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors mt-4"
       >
-        {loading ? 'Saving Profile…' : 'Complete Profile'}
+        {loading ? <T>Saving Profile…</T> : <T>Complete Profile</T>}
       </button>
     </form>
   );

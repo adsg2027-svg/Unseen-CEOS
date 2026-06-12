@@ -1,13 +1,9 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-/**
- * allowedTypes: array of user types allowed, e.g. ['venture', 'funder']
- * adminOnly: restrict access to only the email specified in VITE_ADMIN_EMAIL
- * If omitted, any authenticated user can access.
- */
 export default function PrivateRoute({ allowedTypes, adminOnly }) {
   const { user, userType } = useAuth();
+  const location = useLocation();
 
   if (!user) return <Navigate to="/login" replace />;
 
@@ -16,6 +12,11 @@ export default function PrivateRoute({ allowedTypes, adminOnly }) {
     if (user.email !== adminEmail) {
       return <Navigate to="/unauthorized" replace />;
     }
+  }
+
+  // Redirect to profile setup if authenticated but no userType yet (incomplete onboarding)
+  if (!adminOnly && !userType && location.pathname !== '/select-role') {
+    return <Navigate to="/select-role" replace />;
   }
 
   if (allowedTypes && userType && !allowedTypes.includes(userType)) {

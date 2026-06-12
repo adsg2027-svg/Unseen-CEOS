@@ -2,32 +2,35 @@ import { NavLink } from 'react-router-dom';
 import { Home, LayoutDashboard, Target, Users, Lightbulb, Handshake, Info, X, Send, Bell, Building2, Presentation } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
-
-const funderNav = [
-  { to: '/',                icon: Home,            label: 'Home'         },
-  { to: '/dashboard',       icon: LayoutDashboard, label: 'Dashboard'    },
-  { to: '/profiles',        icon: Users,           label: 'Profiles'     },
-  { to: '/agency',          icon: Target,          label: 'Agency Score' },
-  { to: '/matching',        icon: Handshake,       label: 'Matching'     },
-  { to: '/funder-requests', icon: Bell,            label: 'Requests'     },
-  { to: '/about',           icon: Info,            label: 'About'        },
-];
-
-const ventureNav = [
-  { to: '/',            icon: Home,         label: 'Home'         },
-  { to: '/funders',     icon: Building2,    label: 'Find Funders' },
-  { to: '/my-requests', icon: Send,         label: 'My Requests'  },
-  { to: '/pitch-deck',  icon: Presentation, label: 'Pitch Deck'   },
-  { to: '/builder',     icon: Lightbulb,    label: 'Biz Builder'  },
-  { to: '/about',       icon: Info,         label: 'About'        },
-];
+import { useLang } from '../../context/LanguageContext';
+import T from '../common/T';
 
 export default function Sidebar() {
   const { sidebarOpen, dispatch } = useData();
   const { userType, userProfile } = useAuth();
+  const { t } = useLang();
+
+  const funderNav = [
+    { to: '/',                icon: Home,            labelKey: 'home'         },
+    { to: '/dashboard',       icon: LayoutDashboard, labelKey: 'dashboard'    },
+    { to: '/profiles',        icon: Users,           labelKey: 'profiles'     },
+    { to: '/agency',          icon: Target,          labelKey: 'agencyScore'  },
+    { to: '/matching',        icon: Handshake,       labelKey: 'matching'     },
+    { to: '/funder-requests', icon: Bell,            labelKey: 'requests'     },
+    { to: '/builder',         icon: Lightbulb,       labelKey: 'bizBuilder'   },
+    { to: '/about',           icon: Info,            labelKey: 'about'        },
+  ];
+
+  const ventureNav = [
+    { to: '/',            icon: Home,         labelKey: 'home'         },
+    { to: '/funders',     icon: Building2,    labelKey: 'findFunders'  },
+    { to: '/my-requests', icon: Send,         labelKey: 'myRequests'   },
+    { to: '/pitch-deck',  icon: Presentation, labelKey: 'pitchDeck'    },
+    { to: '/about',       icon: Info,         labelKey: 'about'        },
+  ];
 
   const navItems = userType === 'venture' ? ventureNav : funderNav;
-  const roleLabel = userType === 'venture' ? 'Venture' : userType === 'funder' ? 'Funder' : 'User';
+  const roleLabel = userType === 'venture' ? t('entrepreneur') : userType === 'funder' ? t('funder') : 'User';
   const roleBadgeColor = userType === 'venture'
     ? 'bg-primary-500/20 text-primary-300'
     : 'bg-amber-500/20 text-amber-300';
@@ -83,7 +86,7 @@ export default function Sidebar() {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-3 pt-3 space-y-1">
-          {navItems.map(({ to, icon: Icon, label }) => (
+          {navItems.map(({ to, icon: Icon, labelKey }) => (
             <NavLink
               key={to}
               to={to}
@@ -98,7 +101,7 @@ export default function Sidebar() {
               }
             >
               <Icon size={18} />
-              {label}
+              {t(labelKey)}
             </NavLink>
           ))}
         </nav>
@@ -106,9 +109,9 @@ export default function Sidebar() {
         {/* Bottom card */}
         <div className="shrink-0 px-4 py-4 border-t border-warm-800">
           <div className="bg-warm-800 rounded-lg p-3">
-            <p className="text-xs text-warm-400 mb-0.5">Platform by</p>
-            <p className="text-sm font-medium text-warm-200">Student Researchers</p>
-            <p className="text-xs text-warm-500 mt-0.5">Empowering real women-led growth</p>
+            <p className="text-xs text-warm-400 mb-0.5"><T>Platform by</T></p>
+            <p className="text-sm font-medium text-warm-200"><T>Student Researchers</T></p>
+            <p className="text-xs text-warm-500 mt-0.5"><T>Empowering real women-led growth</T></p>
           </div>
         </div>
       </aside>

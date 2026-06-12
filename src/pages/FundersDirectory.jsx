@@ -3,14 +3,15 @@ import { Building2, Send, CheckCircle, Loader, AlertCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext';
 import { getFundersProfiles, sendFundingRequest, getVentureOutgoingRequests } from '../utils/connections';
 import ConnectModal from '../components/connections/ConnectModal';
+import T from '../components/common/T';
 
 export default function FundersDirectory() {
   const { user, userProfile } = useAuth();
   const [funders, setFunders] = useState([]);
-  const [sentTo, setSentTo] = useState(new Set()); // uids already requested
+  const [sentTo, setSentTo] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-  const [modalFunder, setModalFunder] = useState(null); // funder to send request to
+  const [modalFunder, setModalFunder] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -59,16 +60,18 @@ export default function FundersDirectory() {
           <div className="anim-fade-in-up">
             <div className="flex items-center gap-2 mb-1">
               <Building2 size={16} className="text-white/75" />
-              <p className="text-white/70 text-[11px] font-semibold uppercase tracking-widest">Discover</p>
+              <p className="text-white/70 text-[11px] font-semibold uppercase tracking-widest">
+                <T>Discover</T>
+              </p>
             </div>
-            <h1 className="text-2xl font-bold text-white">Funders Directory</h1>
+            <h1 className="text-2xl font-bold text-white"><T>Funders Directory</T></h1>
             <p className="text-white/70 text-sm mt-1">
-              Browse funders on the platform and send a funding request directly
+              <T>Browse funders on the platform and send a funding request directly</T>
             </p>
           </div>
           <div className="anim-fade-in-up delay-200 shrink-0 bg-white/15 border border-white/25 rounded-xl px-4 py-2 text-center">
             <p className="text-2xl font-black text-white">{funders.length}</p>
-            <p className="text-white/70 text-[11px] font-medium">Funders</p>
+            <p className="text-white/70 text-[11px] font-medium"><T>Funders</T></p>
           </div>
         </div>
       </div>
@@ -82,13 +85,13 @@ export default function FundersDirectory() {
           <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
             <AlertCircle size={26} className="text-red-500" />
           </div>
-          <p className="text-warm-700 font-semibold mb-1">Couldn't load funders</p>
+          <p className="text-warm-700 font-semibold mb-1"><T>Couldn't load funders</T></p>
           <p className="text-warm-400 text-sm mb-4 max-w-md mx-auto break-words">{loadError}</p>
           <button
             onClick={() => window.location.reload()}
             className="bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
           >
-            Retry
+            <T>Retry</T>
           </button>
         </div>
       ) : funders.length === 0 ? (
@@ -96,8 +99,8 @@ export default function FundersDirectory() {
           <div className="w-16 h-16 bg-warm-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Building2 size={28} className="text-warm-300" />
           </div>
-          <p className="text-warm-600 font-semibold mb-1">No funders yet</p>
-          <p className="text-warm-400 text-sm">Funders who join the platform will appear here.</p>
+          <p className="text-warm-600 font-semibold mb-1"><T>No funders yet</T></p>
+          <p className="text-warm-400 text-sm"><T>Funders who join the platform will appear here.</T></p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -110,7 +113,6 @@ export default function FundersDirectory() {
                 className="anim-fade-in-up bg-white rounded-2xl border border-warm-200 shadow-sm overflow-hidden hover:shadow-md hover:border-primary-200 transition-all duration-200"
                 style={{ animationDelay: `${i * 0.05}s` }}
               >
-                {/* Top accent bar */}
                 <div className="h-1.5 bg-gradient-to-r from-primary-500 to-amber-400" />
                 <div className="p-5">
                   <div className="flex items-center gap-3 mb-4">
@@ -128,7 +130,7 @@ export default function FundersDirectory() {
 
                   <div className="flex flex-wrap items-center gap-1.5 mb-4">
                     <span className="text-[10px] bg-amber-50 text-amber-600 font-semibold px-2 py-0.5 rounded-full border border-amber-200">
-                       {funder.fundingType || 'Funder'}
+                      {funder.fundingType || <T>Funder</T>}
                     </span>
                     {funder.investmentRange && (
                       <span className="text-[10px] bg-warm-100 text-warm-600 font-semibold px-2 py-0.5 rounded-full border border-warm-200">
@@ -136,10 +138,12 @@ export default function FundersDirectory() {
                       </span>
                     )}
                   </div>
-                  
+
                   {funder.preferredSectors && (
                     <div className="mb-4">
-                      <p className="text-xs text-warm-500 mb-1 line-clamp-2"><strong>Sectors:</strong> {Array.isArray(funder.preferredSectors) ? funder.preferredSectors.join(', ') : funder.preferredSectors}</p>
+                      <p className="text-xs text-warm-500 mb-1 line-clamp-2">
+                        <strong><T>Sectors:</T></strong> {Array.isArray(funder.preferredSectors) ? funder.preferredSectors.join(', ') : funder.preferredSectors}
+                      </p>
                     </div>
                   )}
 
@@ -159,15 +163,9 @@ export default function FundersDirectory() {
                       }`}
                   >
                     {alreadySent ? (
-                      <>
-                        <CheckCircle size={14} />
-                        Request Sent
-                      </>
+                      <><CheckCircle size={14} /><T>Request Sent</T></>
                     ) : (
-                      <>
-                        <Send size={14} />
-                        Request Funding
-                      </>
+                      <><Send size={14} /><T>Request Funding</T></>
                     )}
                   </button>
                 </div>

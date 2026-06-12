@@ -4,12 +4,15 @@ import { Star, ArrowUpDown, ChevronUp, ChevronDown } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { formatINR, getScoreTierColor, getScoreTier } from '../../utils/agencyScore';
 import { SECTORS } from '../../data/mockData';
+import T from '../common/T';
+import { useT } from '../common/T';
 
 export default function EntrepreneurTable() {
   const { filteredEntrepreneurs, filters, dispatch } = useData();
   const navigate = useNavigate();
   const [sortField, setSortField] = useState('name');
   const [sortDir, setSortDir] = useState('asc');
+  const tp = useT();
 
   function handleSort(field) {
     if (sortField === field) {
@@ -43,14 +46,13 @@ export default function EntrepreneurTable() {
 
   return (
     <div className="bg-white rounded-xl border border-warm-200 shadow-sm">
-      {/* Filters */}
       <div className="p-4 border-b border-warm-100 flex flex-wrap gap-3 items-center">
         <select
           value={filters.sector}
           onChange={(e) => dispatch({ type: 'UPDATE_FILTERS', payload: { sector: e.target.value } })}
           className="text-sm border border-warm-200 rounded-lg px-3 py-2 bg-white text-warm-700 outline-none focus:border-primary-300"
         >
-          <option value="all">All Sectors</option>
+          <option value="all">{tp('All Sectors')}</option>
           {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
 
@@ -59,9 +61,9 @@ export default function EntrepreneurTable() {
           onChange={(e) => dispatch({ type: 'UPDATE_FILTERS', payload: { minAgencyScore: Number(e.target.value) } })}
           className="text-sm border border-warm-200 rounded-lg px-3 py-2 bg-white text-warm-700 outline-none focus:border-primary-300"
         >
-          <option value={0}>All Scores</option>
-          <option value={76}>High Agency (76%+)</option>
-          <option value={48}>Moderate+ (48%+)</option>
+          <option value={0}>{tp('All Scores')}</option>
+          <option value={76}>{tp('High Agency')} (76%+)</option>
+          <option value={48}>{tp('Moderate')}+ (48%+)</option>
         </select>
 
         <label className="flex items-center gap-2 text-sm text-warm-600 cursor-pointer">
@@ -71,32 +73,31 @@ export default function EntrepreneurTable() {
             onChange={(e) => dispatch({ type: 'UPDATE_FILTERS', payload: { shortlistedOnly: e.target.checked } })}
             className="accent-primary-500"
           />
-          Shortlisted only
+          <T>Shortlisted only</T>
         </label>
 
-        <span className="ml-auto text-sm text-warm-400">{sorted.length} result(s)</span>
+        <span className="ml-auto text-sm text-warm-400">{sorted.length} <T>result(s)</T></span>
       </div>
 
-      {/* Desktop Table */}
       <div className="hidden lg:block overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="text-left text-xs font-medium text-warm-500 uppercase tracking-wider border-b border-warm-100">
               {[
-                { key: 'name', label: 'Name' },
-                { key: 'sector', label: 'Sector' },
-                { key: 'agencyScore', label: 'Agency Score' },
-                { key: 'revenue', label: 'Revenue/mo' },
-                { key: 'funding', label: 'Funding Needed' },
+                { key: 'name',        labelKey: 'Name'           },
+                { key: 'sector',      labelKey: 'Sector'         },
+                { key: 'agencyScore', labelKey: 'Agency Score'   },
+                { key: 'revenue',     labelKey: 'Revenue/mo'     },
+                { key: 'funding',     labelKey: 'Funding Needed' },
               ].map(col => (
                 <th key={col.key} className="px-4 py-3 cursor-pointer hover:text-warm-700" onClick={() => handleSort(col.key)}>
                   <div className="flex items-center gap-1">
-                    {col.label}
+                    <T>{col.labelKey}</T>
                     <SortIcon field={col.key} />
                   </div>
                 </th>
               ))}
-              <th className="px-4 py-3 text-center">Shortlist</th>
+              <th className="px-4 py-3 text-center"><T>Shortlist</T></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-warm-50">
@@ -124,7 +125,7 @@ export default function EntrepreneurTable() {
                   </td>
                   <td className="px-4 py-3">
                     <span className={`text-xs font-medium px-2 py-1 rounded-full ${tierColors.bg} ${tierColors.text}`}>
-                      {e.agencyScore.percentage}% — {getScoreTier(e.agencyScore.percentage)}
+                      {e.agencyScore.percentage}% — <T>{getScoreTier(e.agencyScore.percentage)}</T>
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-warm-700">{formatINR(e.monthlyRevenue)}</td>
@@ -144,7 +145,6 @@ export default function EntrepreneurTable() {
         </table>
       </div>
 
-      {/* Mobile Cards */}
       <div className="lg:hidden divide-y divide-warm-100">
         {sorted.map(e => {
           const tierColors = getScoreTierColor(e.agencyScore.percentage);
@@ -184,7 +184,7 @@ export default function EntrepreneurTable() {
 
       {sorted.length === 0 && (
         <div className="p-12 text-center text-warm-400">
-          <p className="text-sm">No entrepreneurs match your filters.</p>
+          <p className="text-sm"><T>No entrepreneurs match your filters.</T></p>
         </div>
       )}
     </div>

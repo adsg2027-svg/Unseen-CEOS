@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Send, AlertCircle } from 'lucide-react';
+import T from '../common/T';
 
 export default function ConnectModal({ title, subtitle, placeholder, onSend, onClose }) {
   const [message, setMessage] = useState('');
@@ -20,6 +21,7 @@ export default function ConnectModal({ title, subtitle, placeholder, onSend, onC
     }
   }
 
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
@@ -37,7 +39,7 @@ export default function ConnectModal({ title, subtitle, placeholder, onSend, onC
           {error && (
             <div className="mb-4 flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2.5 text-sm">
               <AlertCircle size={15} className="shrink-0 mt-0.5" />
-              {error}
+              <T>{error}</T>
             </div>
           )}
           <textarea
@@ -47,7 +49,7 @@ export default function ConnectModal({ title, subtitle, placeholder, onSend, onC
             placeholder={placeholder ?? 'Write your message…'}
             className="w-full border border-warm-200 rounded-xl px-3.5 py-2.5 text-sm text-warm-900 placeholder-warm-400 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent resize-none transition"
           />
-          <p className="text-xs text-warm-400 mt-1.5">{message.length}/500 characters</p>
+          <p className="text-xs text-warm-400 mt-1.5">{message.length}/500 <T>characters</T></p>
         </div>
 
         <div className="flex items-center gap-2 px-5 pb-5">
@@ -55,7 +57,7 @@ export default function ConnectModal({ title, subtitle, placeholder, onSend, onC
             onClick={onClose}
             className="flex-1 border border-warm-200 text-warm-600 hover:bg-warm-50 font-medium py-2.5 rounded-xl text-sm transition-colors"
           >
-            Cancel
+            <T>Cancel</T>
           </button>
           <button
             onClick={handleSend}
@@ -67,7 +69,7 @@ export default function ConnectModal({ title, subtitle, placeholder, onSend, onC
             ) : (
               <Send size={14} />
             )}
-            {loading ? 'Sending…' : 'Send'}
+            {loading ? <T>Sending…</T> : <T>Send</T>}
           </button>
         </div>
       </div>

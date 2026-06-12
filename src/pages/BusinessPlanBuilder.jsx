@@ -3,6 +3,7 @@ import { Lightbulb, Sparkles } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import TemplateForm from '../components/builder/TemplateForm';
 import AIChatbot from '../components/builder/AIChatbot';
+import T from '../components/common/T';
 
 export default function BusinessPlanBuilder() {
   const { getEntrepreneurById } = useData();
@@ -20,11 +21,11 @@ export default function BusinessPlanBuilder() {
         <div className="relative z-10 anim-fade-in-up">
           <div className="flex items-center gap-2 mb-1">
             <Sparkles size={15} className="text-white/75" />
-            <p className="text-white/70 text-[11px] font-semibold uppercase tracking-widest">AI-Assisted Planning</p>
+            <p className="text-white/70 text-[11px] font-semibold uppercase tracking-widest"><T>AI-Assisted Planning</T></p>
           </div>
-          <h1 className="text-2xl font-bold text-white">Business Plan Builder</h1>
+          <h1 className="text-2xl font-bold text-white"><T>Business Plan Builder</T></h1>
           <p className="text-white/70 text-sm mt-1">
-            Create revenue models, unit economics, and working capital estimates with AI assistance
+            <T>Create revenue models, unit economics, and working capital estimates with AI assistance</T>
           </p>
         </div>
         <div className="absolute right-6 top-1/2 -translate-y-1/2 hidden sm:block">

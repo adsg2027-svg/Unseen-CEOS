@@ -6,11 +6,12 @@ import {
   getFunderSentConnections,
   updateConnectionStatus,
 } from '../utils/connections';
+import T from '../components/common/T';
 
 const STATUS_CONFIG = {
-  pending:  { label: 'Pending',  icon: Clock,       color: 'text-amber-600 bg-amber-50  border-amber-200' },
-  accepted: { label: 'Accepted', icon: CheckCircle, color: 'text-green-600 bg-green-50  border-green-200' },
-  declined: { label: 'Declined', icon: XCircle,     color: 'text-red-500   bg-red-50    border-red-200'   },
+  pending:  { labelKey: 'Pending',  icon: Clock,       color: 'text-amber-600 bg-amber-50  border-amber-200' },
+  accepted: { labelKey: 'Accepted', icon: CheckCircle, color: 'text-green-600 bg-green-50  border-green-200' },
+  declined: { labelKey: 'Declined', icon: XCircle,     color: 'text-red-500   bg-red-50    border-red-200'   },
 };
 
 function StatusBadge({ status }) {
@@ -19,7 +20,7 @@ function StatusBadge({ status }) {
   return (
     <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border ${cfg.color}`}>
       <Icon size={11} />
-      {cfg.label}
+      <T>{cfg.labelKey}</T>
     </span>
   );
 }
@@ -40,7 +41,7 @@ function EmptyState({ icon: Icon, message }) {
       <div className="w-14 h-14 bg-warm-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
         <Icon size={24} className="text-warm-300" />
       </div>
-      <p className="text-warm-500 text-sm">{message}</p>
+      <p className="text-warm-500 text-sm"><T>{message}</T></p>
     </div>
   );
 }
@@ -77,9 +78,7 @@ export default function FunderRequests() {
     setUpdating(connectionId);
     try {
       await updateConnectionStatus(connectionId, status);
-      setIncoming(prev =>
-        prev.map(r => r.id === connectionId ? { ...r, status } : r)
-      );
+      setIncoming(prev => prev.map(r => r.id === connectionId ? { ...r, status } : r));
     } finally {
       setUpdating(null);
     }
@@ -95,28 +94,29 @@ export default function FunderRequests() {
           <div className="anim-fade-in-up">
             <div className="flex items-center gap-2 mb-1">
               <Bell size={16} className="text-white/75" />
-              <p className="text-white/70 text-[11px] font-semibold uppercase tracking-widest">Connection Hub</p>
+              <p className="text-white/70 text-[11px] font-semibold uppercase tracking-widest">
+                <T>Connection Hub</T>
+              </p>
             </div>
-            <h1 className="text-2xl font-bold text-white">Requests & Connections</h1>
+            <h1 className="text-2xl font-bold text-white"><T>Requests &amp; Connections</T></h1>
             <p className="text-white/70 text-sm mt-1">
-              Funding requests from ventures and your outgoing connections
+              <T>Funding requests from ventures and your outgoing connections</T>
             </p>
           </div>
           {pendingCount > 0 && (
             <div className="anim-fade-in-up delay-200 shrink-0 bg-white/15 border border-white/25 rounded-xl px-4 py-2 text-center">
               <p className="text-2xl font-black text-white">{pendingCount}</p>
-              <p className="text-white/70 text-[11px] font-medium">Pending</p>
+              <p className="text-white/70 text-[11px] font-medium"><T>Pending</T></p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-1 bg-warm-100 rounded-xl p-1 mb-6 w-fit">
         {[
-          { key: 'incoming', label: 'Incoming Requests', count: incoming.length, icon: Bell },
-          { key: 'sent',     label: 'Sent Connections',  count: sent.length,     icon: Send },
-        ].map(({ key, label, count, icon: Icon }) => (
+          { key: 'incoming', labelKey: 'Incoming Requests', count: incoming.length, icon: Bell },
+          { key: 'sent',     labelKey: 'Sent Connections',  count: sent.length,     icon: Send },
+        ].map(({ key, labelKey, count, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
@@ -124,7 +124,7 @@ export default function FunderRequests() {
               ${tab === key ? 'bg-white text-warm-900 shadow-sm' : 'text-warm-500 hover:text-warm-700'}`}
           >
             <Icon size={14} />
-            {label}
+            <T>{labelKey}</T>
             <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center
               ${tab === key ? 'bg-primary-100 text-primary-600' : 'bg-warm-200 text-warm-500'}`}>
               {count}
@@ -142,13 +142,13 @@ export default function FunderRequests() {
           <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
             <AlertCircle size={26} className="text-red-500" />
           </div>
-          <p className="text-warm-700 font-semibold mb-1">Couldn't load requests</p>
+          <p className="text-warm-700 font-semibold mb-1"><T>Couldn't load requests</T></p>
           <p className="text-warm-400 text-sm mb-4 max-w-md mx-auto break-words">{loadError}</p>
           <button
             onClick={() => window.location.reload()}
             className="bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
           >
-            Retry
+            <T>Retry</T>
           </button>
         </div>
       ) : tab === 'incoming' ? (
@@ -162,17 +162,15 @@ export default function FunderRequests() {
                   <div>
                     <p className="text-sm font-semibold text-warm-900">{req.fromName}</p>
                     <span className="text-[10px] font-semibold bg-primary-50 text-primary-600 border border-primary-200 px-2 py-0.5 rounded-full">
-                      Venture
+                      <T>Entrepreneur</T>
                     </span>
                     <p className="text-xs text-warm-400 mt-1">{timeAgo(req.createdAt)}</p>
                   </div>
                   <StatusBadge status={req.status} />
                 </div>
-
                 <p className="text-sm text-warm-600 bg-warm-50 rounded-lg px-3 py-2 leading-relaxed mb-3">
                   "{req.message}"
                 </p>
-
                 {req.status === 'pending' && (
                   <div className="flex gap-2">
                     <button
@@ -181,7 +179,7 @@ export default function FunderRequests() {
                       className="flex items-center gap-1.5 text-xs font-semibold text-green-600 hover:bg-green-50 border border-green-200 px-3 py-2 rounded-lg transition-colors disabled:opacity-60"
                     >
                       <Check size={13} />
-                      Accept
+                      <T>Accept</T>
                     </button>
                     <button
                       onClick={() => handleStatus(req.id, 'declined')}
@@ -189,7 +187,7 @@ export default function FunderRequests() {
                       className="flex items-center gap-1.5 text-xs font-semibold text-red-500 hover:bg-red-50 border border-red-200 px-3 py-2 rounded-lg transition-colors disabled:opacity-60"
                     >
                       <X size={13} />
-                      Decline
+                      <T>Decline</T>
                     </button>
                   </div>
                 )}

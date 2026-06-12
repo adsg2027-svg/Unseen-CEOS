@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import T from '../components/common/T';
+import { useT } from '../components/common/T';
 
 export default function Login() {
   const { login, signInWithGoogle } = useAuth();
@@ -12,6 +14,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const tp = useT();
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -19,7 +22,11 @@ export default function Login() {
     setLoading(true);
     try {
       const { userType: loggedInType } = await login(email, password);
-      navigate(loggedInType === 'venture' ? '/funders' : '/dashboard');
+      if (!loggedInType) {
+        navigate('/select-role');
+      } else {
+        navigate(loggedInType === 'venture' ? '/funders' : '/dashboard');
+      }
     } catch (err) {
       setError(friendlyError(err.code));
     } finally {
@@ -45,7 +52,6 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-amber-700 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
@@ -53,18 +59,17 @@ export default function Login() {
             </div>
             <h1 className="text-2xl font-bold text-white">The Unseen CEOs</h1>
           </div>
-          <p className="text-primary-200 text-sm">Sign in to your account</p>
+          <p className="text-primary-200 text-sm"><T>Sign in to your account</T></p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           {error && (
             <div className="mb-5 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
               <AlertCircle size={16} className="shrink-0 mt-0.5" />
-              {error}
+              <T>{error}</T>
             </div>
           )}
 
-          {/* Google Sign-In */}
           <button
             type="button"
             onClick={handleGoogle}
@@ -76,18 +81,18 @@ export default function Login() {
             ) : (
               <GoogleIcon />
             )}
-            Continue with Google
+            <T>Continue with Google</T>
           </button>
 
           <div className="flex items-center gap-3 mb-5">
             <div className="flex-1 h-px bg-warm-200" />
-            <span className="text-xs text-warm-400">or</span>
+            <span className="text-xs text-warm-400"><T>or</T></span>
             <div className="flex-1 h-px bg-warm-200" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-warm-700 mb-1.5">Email</label>
+              <label className="block text-sm font-medium text-warm-700 mb-1.5"><T>Email</T></label>
               <input
                 type="email"
                 required
@@ -99,7 +104,7 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-warm-700 mb-1.5">Password</label>
+              <label className="block text-sm font-medium text-warm-700 mb-1.5"><T>Password</T></label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -124,14 +129,14 @@ export default function Login() {
               disabled={loading || googleLoading}
               className="w-full bg-primary-500 hover:bg-primary-600 disabled:opacity-60 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors"
             >
-              {loading ? 'Signing in…' : 'Sign In'}
+              {loading ? <T>Signing in…</T> : <T>Sign In</T>}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-warm-500">
-            Don't have an account?{' '}
+            <T>Don't have an account?</T>{' '}
             <Link to="/signup" className="text-primary-600 font-medium hover:text-primary-700">
-              Create one
+              <T>Create one</T>
             </Link>
           </p>
         </div>

@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { TrendingUp, Handshake, AlertCircle } from 'lucide-react';
 import VentureForm from '../components/profile/VentureForm';
 import FunderForm from '../components/profile/FunderForm';
+import T from '../components/common/T';
 
 const USER_TYPES = [
   {
     value: 'venture',
-    label: 'Venture',
+    label: 'Entrepreneur',
     description: 'I am a woman entrepreneur looking to grow my business and access resources.',
     icon: TrendingUp,
     color: 'primary',
@@ -23,12 +24,19 @@ const USER_TYPES = [
 ];
 
 export default function SelectRole() {
-  const { saveUserType, user } = useAuth();
+  const { saveUserType, user, userType: existingType } = useAuth();
   const navigate = useNavigate();
   const [userType, setUserType] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+
+  useEffect(() => {
+    if (existingType) {
+      setUserType(existingType);
+      setStep(2);
+    }
+  }, [existingType]);
 
   async function handleComplete() {
     setError('');
@@ -59,7 +67,9 @@ export default function SelectRole() {
             <h1 className="text-2xl font-bold text-white">The Unseen CEOs</h1>
           </div>
           <p className="text-primary-200 text-sm">
-            {step === 1 ? `Welcome${user?.displayName ? `, ${user.displayName}` : ''}! One last step.` : `Complete your profile`}
+            {step === 1
+              ? (user?.displayName ? `Welcome, ${user.displayName}! One last step.` : 'Welcome! One last step.')
+              : 'Complete your profile'}
           </p>
         </div>
 
@@ -67,15 +77,15 @@ export default function SelectRole() {
           {error && (
             <div className="mb-5 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
               <AlertCircle size={16} className="shrink-0 mt-0.5" />
-              {error}
+              <T>{error}</T>
             </div>
           )}
 
           {step === 1 ? (
             <>
-              <h2 className="text-lg font-bold text-warm-900 mb-1 text-center">Choose your account type</h2>
+              <h2 className="text-lg font-bold text-warm-900 mb-1 text-center"><T>Choose your account type</T></h2>
               <p className="text-sm text-warm-500 mb-5 text-center">
-                This determines which tools and views you'll have access to.
+                <T>This determines which tools and views you'll have access to.</T>
               </p>
 
               <div className="grid grid-cols-1 gap-3 mb-6 max-w-md mx-auto">
@@ -103,9 +113,9 @@ export default function SelectRole() {
                       </div>
                       <div>
                         <p className={`text-sm font-semibold ${selected ? (color === 'primary' ? 'text-primary-700' : 'text-amber-700') : 'text-warm-800'}`}>
-                          {label}
+                          <T>{label}</T>
                         </p>
-                        <p className="text-xs text-warm-500 mt-0.5 leading-snug">{description}</p>
+                        <p className="text-xs text-warm-500 mt-0.5 leading-snug"><T>{description}</T></p>
                       </div>
                     </button>
                   );
@@ -118,7 +128,7 @@ export default function SelectRole() {
                   disabled={!userType}
                   className="w-full bg-primary-500 hover:bg-primary-600 disabled:opacity-60 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors"
                 >
-                  Continue
+                  <T>Continue</T>
                 </button>
               </div>
             </>

@@ -7,8 +7,8 @@ import BusinessMetrics from '../components/profile/BusinessMetrics';
 import ScoreBreakdown from '../components/agency/ScoreBreakdown';
 import FundingPlan from '../components/profile/FundingPlan';
 import Card from '../components/common/Card';
+import T from '../components/common/T';
 
-// Keys rendered by dedicated display components — skip in the custom section
 const HANDLED_KEYS = new Set([
   'name', 'businessName', 'location', 'state', 'sector', 'businessType',
   'yearsInBusiness', 'registrationType', 'avatarColor', 'type', 'id',
@@ -37,17 +37,17 @@ function DynamicProfileFields({ entrepreneur }) {
   }, {});
 
   return (
-    <Card title="Profile Details" icon={LayoutList} className="mt-6 anim-fade-in-up delay-300">
+    <Card title={<T>Profile Details</T>} icon={LayoutList} className="mt-6 anim-fade-in-up delay-300">
       {Object.entries(sections).map(([section, sFields]) => (
         <div key={section} className="mb-5 last:mb-0">
-          <p className="text-xs font-bold text-warm-500 uppercase tracking-wider mb-2">{section}</p>
+          <p className="text-xs font-bold text-warm-500 uppercase tracking-wider mb-2"><T>{section}</T></p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {sFields.map(f => {
               const raw = entrepreneur[f.key];
               const display = Array.isArray(raw) ? raw.join(', ') : String(raw ?? '');
               return (
                 <div key={f.key} className="bg-warm-50 rounded-lg px-3 py-2.5">
-                  <p className="text-[10px] font-semibold text-warm-400 uppercase tracking-wider mb-0.5">{f.label}</p>
+                  <p className="text-[10px] font-semibold text-warm-400 uppercase tracking-wider mb-0.5"><T>{f.label}</T></p>
                   <p className="text-sm text-warm-800 font-medium">{display || '—'}</p>
                 </div>
               );
@@ -70,11 +70,11 @@ export default function EntrepreneurProfile() {
         <div className="w-16 h-16 bg-warm-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
           <Target size={28} className="text-warm-300" />
         </div>
-        <p className="text-lg font-semibold text-warm-700 mb-2">Entrepreneur not found</p>
-        <p className="text-warm-500 text-sm mb-4">The profile you're looking for doesn't exist.</p>
+        <p className="text-lg font-semibold text-warm-700 mb-2"><T>Entrepreneur not found</T></p>
+        <p className="text-warm-500 text-sm mb-4"><T>The profile you're looking for doesn't exist.</T></p>
         <Link to="/profiles" className="inline-flex items-center gap-1 text-primary-600 hover:text-primary-700 font-medium text-sm">
           <ArrowLeft size={14} />
-          Back to Profiles
+          <T>Back to Profiles</T>
         </Link>
       </div>
     );
@@ -87,7 +87,7 @@ export default function EntrepreneurProfile() {
         className="inline-flex items-center gap-1.5 text-sm text-warm-500 hover:text-primary-600 font-medium mb-4 transition-colors duration-200"
       >
         <ArrowLeft size={14} />
-        Back to Profiles
+        <T>Back to Profiles</T>
       </Link>
 
       <div className="anim-fade-in-up">
@@ -96,7 +96,7 @@ export default function EntrepreneurProfile() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6 anim-fade-in-up delay-100">
         <BusinessMetrics entrepreneur={entrepreneur} />
-        <Card title="Agency Score" icon={Target}>
+        <Card title={<T>Agency Score</T>} icon={Target}>
           <ScoreBreakdown entrepreneur={entrepreneur} />
         </Card>
       </div>
