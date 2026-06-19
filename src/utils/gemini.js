@@ -100,6 +100,107 @@ Max 130 words total.`;
   return sendMessage(prompt);
 }
 
+export async function generatePitchDeck(profile) {
+  if (!initializeClient()) return { success: false, error: 'Gemini API key not configured.' };
+
+  const fmt = n => n ? `₹${Number(n).toLocaleString('en-IN')}` : '₹0';
+  const margin = profile.monthlyRevenue > 0
+    ? Math.round((profile.monthlyProfit / profile.monthlyRevenue) * 100)
+    : 0;
+
+  const prompt = `You are creating a professional investor pitch deck for an Indian woman micro-entrepreneur. Use ONLY the data below — no generic placeholders.
+
+ENTREPRENEUR DATA:
+Name: ${profile.name} | Business: ${profile.businessName} | Type: ${profile.businessType || 'N/A'}
+Sector: ${profile.sector} | Location: ${profile.location}, ${profile.state || ''}
+Years in Business: ${profile.yearsInBusiness} | Registration: ${profile.registrationType}
+
+FINANCIALS:
+Revenue: ${fmt(profile.monthlyRevenue)}/mo | Costs: ${fmt(profile.monthlyCosts)}/mo
+Profit: ${fmt(profile.monthlyProfit)}/mo | Margin: ${margin}%
+
+PRODUCT: ${profile.unitEconomics?.productName || 'N/A'} | Price: ${fmt(profile.unitEconomics?.unitPrice)} | Cost: ${fmt(profile.unitEconomics?.unitCost)} | Daily units: ${profile.unitEconomics?.dailyUnits || 0} | Unit margin: ${fmt(profile.unitEconomics?.marginPerUnit)}
+
+FUNDING GOAL: ${fmt(profile.fundingNeeded)} for "${profile.fundingPurpose}"
+Current sources: ${(profile.currentFundingSources || []).join(', ') || 'None'}
+
+GROWTH PLANS:
+3 months: ${profile.growthPlan?.shortTerm || 'N/A'}
+6-12 months: ${profile.growthPlan?.mediumTerm || 'N/A'}
+2-3 years: ${profile.growthPlan?.longTerm || 'N/A'}
+
+CHALLENGES: ${(profile.challenges || []).join(', ') || 'None listed'}
+AGENCY SCORE: ${profile.agencyScore?.percentage || 0}%
+
+Generate a 7-slide investor pitch deck. Respond with ONLY valid JSON (no markdown, no code fences):
+{"deckTitle":"...","slides":[{"type":"cover","title":"...","content":"...","bullets":["...","...","..."]},{"type":"problem","title":"...","content":"...","bullets":["...","...","..."]},{"type":"solution","title":"...","content":"...","bullets":["...","...","..."]},{"type":"traction","title":"...","content":"...","bullets":["...","...","..."]},{"type":"financials","title":"...","content":"...","bullets":["...","...","..."]},{"type":"team","title":"...","content":"...","bullets":["...","...","..."]},{"type":"ask","title":"...","content":"...","bullets":["...","...","..."]}]}
+
+Rules (strict):
+- content: 2 compelling sentences telling her story using actual numbers
+- bullets: exactly 3 specific data-backed points each
+- titles: make them punchy using real numbers (e.g. "${fmt(profile.monthlyRevenue)}/mo Revenue" not "Traction")
+- team slide: about ${profile.name}, her background, what makes her the right person
+- problem slide: what market gap her business addresses in ${profile.sector} in India
+- Use ${fmt(profile.fundingNeeded)} and all real numbers throughout`;
+
+  try {
+    if (!model) initializeClient();
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { maxOutputTokens: 2048, temperature: 0.7 },
+    });
+    const text = result.response.text().trim();
+    const jsonStr = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+    const parsed = JSON.parse(jsonStr);
+    return { success: true, data: parsed };
+  } catch (err) {
+    console.error('generatePitchDeck error:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+export async function generateSlideContent(profile, slideType, slideTitle) {
+  if (!initializeClient()) return { success: false, error: 'Gemini API key not configured.' };
+
+  const fmt = n => n ? `₹${Number(n).toLocaleString('en-IN')}` : '₹0';
+  const margin = profile.monthlyRevenue > 0
+    ? Math.round((profile.monthlyProfit / profile.monthlyRevenue) * 100)
+    : 0;
+
+  const slideContexts = {
+    cover:          `Introduce ${profile.name}'s business ${profile.businessName} (${profile.sector}, ${profile.location}). ${profile.yearsInBusiness} years old, ${fmt(profile.monthlyRevenue)}/mo revenue.`,
+    problem:        `What problem in the ${profile.sector} sector does ${profile.businessName} solve? Challenges faced: ${(profile.challenges || []).join(', ')}.`,
+    solution:       `How does ${profile.businessName} solve this? Product: ${profile.unitEconomics?.productName || profile.businessType}, price ₹${profile.unitEconomics?.unitPrice}/unit, ${margin}% margin.`,
+    'business-model': `How does ${profile.businessName} make money? ${fmt(profile.monthlyRevenue)}/mo from ${profile.unitEconomics?.productName || profile.sector}. ${fmt(profile.unitEconomics?.unitPrice)} per unit, ${profile.unitEconomics?.dailyUnits} units/day.`,
+    market:         `Market opportunity for ${profile.sector} in India, targeting ${profile.location} and beyond. ${profile.businessType} business model.`,
+    traction:       `Business traction: ${fmt(profile.monthlyRevenue)}/mo revenue, ${fmt(profile.monthlyProfit)}/mo profit, ${margin}% margin, ${profile.yearsInBusiness} years running. Growth plan: ${profile.growthPlan?.shortTerm}.`,
+    financials:     `Financials: Revenue ${fmt(profile.monthlyRevenue)}/mo, Costs ${fmt(profile.monthlyCosts)}/mo, Profit ${fmt(profile.monthlyProfit)}/mo, Margin ${margin}%. Unit economics: ${fmt(profile.unitEconomics?.unitPrice)} price, ${fmt(profile.unitEconomics?.unitCost)} cost.`,
+    team:           `About ${profile.name}: ${profile.yearsInBusiness} years running ${profile.businessName} in ${profile.location}. Registration: ${profile.registrationType}. Agency score: ${profile.agencyScore?.percentage}%.`,
+    ask:            `Funding ask: ${fmt(profile.fundingNeeded)} for "${profile.fundingPurpose}". Current sources: ${(profile.currentFundingSources || []).join(', ')}. Growth milestones: ${profile.growthPlan?.mediumTerm}.`,
+    custom:         `Content for the "${slideTitle}" slide of ${profile.businessName}'s pitch deck.`,
+  };
+
+  const context = slideContexts[slideType] || slideContexts.custom;
+  const prompt = `Generate pitch deck slide content. Slide: "${slideTitle}" (type: ${slideType}). Context: ${context}
+
+Respond with ONLY valid JSON (no markdown):
+{"content":"2 compelling sentences using real numbers","bullets":["specific point 1","specific point 2","specific point 3"]}`;
+
+  try {
+    if (!model) initializeClient();
+    const result = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { maxOutputTokens: 400, temperature: 0.7 },
+    });
+    const text = result.response.text().trim();
+    const jsonStr = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim();
+    const parsed = JSON.parse(jsonStr);
+    return { success: true, data: parsed };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
 export async function generateBusinessPlanSection(entrepreneur, sectionType) {
   const prompts = {
     revenue_model: `Revenue model for ${entrepreneur.name}'s "${entrepreneur.businessName}" (${entrepreneur.sector}). Unit: ${entrepreneur.unitEconomics?.productName} @ ₹${entrepreneur.unitEconomics?.unitPrice}, ${entrepreneur.unitEconomics?.dailyUnits} units/day. In 3-5 bullet points: current monthly revenue, top revenue driver, one pricing improvement, one volume growth lever. Max 120 words.`,

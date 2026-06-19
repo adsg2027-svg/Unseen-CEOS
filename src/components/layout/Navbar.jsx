@@ -50,14 +50,14 @@ export default function Navbar() {
         >
           <Menu size={20} className="text-warm-700" />
         </button>
-        <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">UC</span>
           </div>
           <h1 className="text-lg font-bold text-warm-900 hidden sm:block">
             The Unseen <span className="text-primary-500">CEOs</span>
           </h1>
-        </div>
+        </Link>
       </div>
 
       <div className="hidden md:flex items-center gap-2 bg-warm-50 border border-warm-200 rounded-lg px-3 py-2 w-72">

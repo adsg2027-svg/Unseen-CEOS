@@ -1,6 +1,8 @@
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Upload, BarChart3, FileText, Handshake, ChevronDown, Sparkles } from 'lucide-react';
+import { ArrowRight, Upload, BarChart3, FileText, Handshake, ChevronDown, Sparkles, Globe } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLang } from '../context/LanguageContext';
 import img1 from '../assets/img_1.jpg';
 import img2 from '../assets/img_2.jpg';
 import T from '../components/common/T';
@@ -50,7 +52,20 @@ function HeroImage({ src, alt, caption, side }) {
 
 export default function Landing() {
   const { user, userType, userProfile } = useAuth();
+  const { lang, switchLang, t, LANGUAGES } = useLang();
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef(null);
   const appHome = userType === 'venture' ? '/funders' : '/dashboard';
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (langRef.current && !langRef.current.contains(e.target)) setLangOpen(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const currentLang = LANGUAGES.find(l => l.code === lang);
 
   return (
     <div className="min-h-screen">
@@ -65,6 +80,37 @@ export default function Landing() {
           </span>
         </div>
         <div className="flex items-center gap-2">
+          {/* Language switcher */}
+          <div className="relative" ref={langRef}>
+            <button
+              onClick={() => setLangOpen(o => !o)}
+              className="flex items-center gap-1.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg px-2 py-1.5 transition-colors"
+            >
+              <Globe size={15} />
+              <span className="text-xs font-semibold hidden sm:block">{currentLang?.nativeLabel}</span>
+              <ChevronDown size={11} className="hidden sm:block" />
+            </button>
+            {langOpen && (
+              <div className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-warm-200 rounded-xl shadow-lg py-1 z-50 max-h-72 overflow-y-auto">
+                <p className="px-3 py-1.5 text-[10px] font-bold text-warm-400 uppercase tracking-wider border-b border-warm-100 mb-1">
+                  {t('language')}
+                </p>
+                {LANGUAGES.map(l => (
+                  <button
+                    key={l.code}
+                    onClick={() => { switchLang(l.code); setLangOpen(false); }}
+                    className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors ${
+                      lang === l.code ? 'bg-primary-50 text-primary-700 font-semibold' : 'text-warm-700 hover:bg-warm-50'
+                    }`}
+                  >
+                    <span>{l.nativeLabel}</span>
+                    <span className="text-xs text-warm-400">{l.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           {user ? (
             <>
               <span className="hidden sm:block text-white/70 text-sm">{userProfile?.displayName ?? user.email}</span>

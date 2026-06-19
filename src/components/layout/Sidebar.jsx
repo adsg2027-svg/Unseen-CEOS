@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, LayoutDashboard, Target, Users, Lightbulb, Handshake, Info, X, Send, Bell, Building2, Presentation } from 'lucide-react';
+import { Home, LayoutDashboard, Compass, Lightbulb, Info, X, Send, Bell, Building2, Presentation } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
 import { useLang } from '../../context/LanguageContext';
@@ -13,16 +13,14 @@ export default function Sidebar() {
   const funderNav = [
     { to: '/',                icon: Home,            labelKey: 'home'         },
     { to: '/dashboard',       icon: LayoutDashboard, labelKey: 'dashboard'    },
-    { to: '/profiles',        icon: Users,           labelKey: 'profiles'     },
-    { to: '/agency',          icon: Target,          labelKey: 'agencyScore'  },
-    { to: '/matching',        icon: Handshake,       labelKey: 'matching'     },
+    { to: '/discover',        icon: Compass,         labelKey: 'discover'     },
     { to: '/funder-requests', icon: Bell,            labelKey: 'requests'     },
-    { to: '/builder',         icon: Lightbulb,       labelKey: 'bizBuilder'   },
     { to: '/about',           icon: Info,            labelKey: 'about'        },
   ];
 
   const ventureNav = [
     { to: '/',            icon: Home,         labelKey: 'home'         },
+    { to: '/builder',     icon: Lightbulb,    labelKey: 'bizBuilder'   },
     { to: '/funders',     icon: Building2,    labelKey: 'findFunders'  },
     { to: '/my-requests', icon: Send,         labelKey: 'myRequests'   },
     { to: '/pitch-deck',  icon: Presentation, labelKey: 'pitchDeck'    },

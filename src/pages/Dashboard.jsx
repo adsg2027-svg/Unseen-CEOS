@@ -1,11 +1,11 @@
-import { RotateCcw, BarChart3 } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import StatsCards from '../components/dashboard/StatsCards';
 import EntrepreneurTable from '../components/dashboard/EntrepreneurTable';
 import T from '../components/common/T';
 
 export default function Dashboard() {
-  const { dispatch } = useData();
+  const { dispatch, loading } = useData();
 
   return (
     <div>
@@ -19,23 +19,15 @@ export default function Dashboard() {
               <p className="text-white/70 text-[11px] font-semibold uppercase tracking-widest">
                 <T>Operations Hub</T>
               </p>
+              <span className="flex items-center gap-1 ml-2 bg-white/10 rounded-full px-2 py-0.5 text-[10px] text-white/60">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                <T>Live</T>
+              </span>
             </div>
             <h1 className="text-2xl font-bold text-white"><T>Data Collection Dashboard</T></h1>
             <p className="text-white/70 text-sm mt-1">
               <T>Upload interview data and manage entrepreneur profiles</T>
             </p>
-          </div>
-          <div className="anim-fade-in-up delay-300 shrink-0">
-            <button
-              onClick={() => {
-                localStorage.removeItem('unseenceo_data');
-                dispatch({ type: 'RESET_DATA' });
-              }}
-              className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 border border-white/30 text-white text-sm font-medium px-4 py-2 rounded-xl transition-all duration-200 backdrop-blur-sm"
-            >
-              <RotateCcw size={13} />
-              <T>Reset to Demo Data</T>
-            </button>
           </div>
         </div>
       </div>

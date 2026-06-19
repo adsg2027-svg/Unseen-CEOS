@@ -16,6 +16,7 @@ import Profiles from './pages/Profiles';
 import EntrepreneurProfile from './pages/EntrepreneurProfile';
 import BusinessPlanBuilder from './pages/BusinessPlanBuilder';
 import Matching from './pages/Matching';
+import Discover from './pages/Discover';
 import About from './pages/About';
 import FundersDirectory from './pages/FundersDirectory';
 import MyRequests from './pages/MyRequests';
@@ -23,6 +24,7 @@ import FunderRequests from './pages/FunderRequests';
 import Admin from './pages/Admin';
 import MyProfile from './pages/MyProfile';
 import PitchDeck from './pages/PitchDeck';
+import Chat from './pages/Chat';
 
 function App() {
   return (
@@ -44,16 +46,17 @@ function App() {
               <Route element={<Layout />}>
                 <Route path="/about" element={<About />} />
                 <Route path="/my-profile" element={<MyProfile />} />
+                <Route path="/chat/:connectionId" element={<Chat />} />
 
                 {/* Funder-only */}
                 <Route element={<PrivateRoute allowedTypes={['funder']} />}>
                   <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/agency" element={<AgencyScore />} />
-                  <Route path="/profiles" element={<Profiles />} />
+                  <Route path="/discover" element={<Discover />} />
                   <Route path="/profiles/:id" element={<EntrepreneurProfile />} />
-                  <Route path="/matching" element={<Matching />} />
+                  <Route path="/profiles" element={<Navigate to="/discover" replace />} />
+                  <Route path="/agency" element={<Navigate to="/discover" replace />} />
+                  <Route path="/matching" element={<Navigate to="/discover" replace />} />
                   <Route path="/funder-requests" element={<FunderRequests />} />
-                  <Route path="/builder" element={<BusinessPlanBuilder />} />
                 </Route>
 
                 {/* Venture-only */}
@@ -61,6 +64,7 @@ function App() {
                   <Route path="/funders" element={<FundersDirectory />} />
                   <Route path="/my-requests" element={<MyRequests />} />
                   <Route path="/pitch-deck" element={<PitchDeck />} />
+                  <Route path="/builder" element={<BusinessPlanBuilder />} />
                 </Route>
                 
                 {/* Admin-only */}

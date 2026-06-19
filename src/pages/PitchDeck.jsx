@@ -3,13 +3,12 @@ import T from '../components/common/T';
 import { db } from '../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
-import { sendMessage, isApiKeyConfigured } from '../utils/gemini';
+import { generatePitchDeck, generateSlideContent, isApiKeyConfigured } from '../utils/gemini';
 import {
-  Plus, Trash2, Save, Eye, EyeOff, ChevronLeft, ChevronRight,
-  Presentation, Check, GripVertical, ArrowUp, ArrowDown,
+  Plus, Trash2, Save, Eye, GripVertical, ArrowUp, ArrowDown,
   Lightbulb, Users, BarChart2, TrendingUp, DollarSign,
-  Target, Layers, Megaphone, FileText, Copy, Sparkles, Loader2,
-  X, ChevronDown,
+  Target, Layers, FileText, Copy, Sparkles, Loader2,
+  X, ChevronLeft, ChevronRight, Check, Presentation, RefreshCw,
 } from 'lucide-react';
 
 const SLIDE_TYPES = [
@@ -27,13 +26,82 @@ const SLIDE_TYPES = [
 
 function uid() { return `s${Date.now()}-${Math.random().toString(36).slice(2, 6)}`; }
 
-function makeSlide(type = 'custom') {
-  const t = SLIDE_TYPES.find(s => s.value === type) ?? SLIDE_TYPES[0];
-  return { id: uid(), type, title: t.label, content: '', bullets: ['', '', ''] };
+function makeSlide(type = 'custom', overrides = {}) {
+  const t = SLIDE_TYPES.find(s => s.value === type) ?? SLIDE_TYPES[9];
+  return { id: uid(), type, title: t.label, content: '', bullets: [], ...overrides };
 }
 
 function getTypeInfo(type) {
-  return SLIDE_TYPES.find(s => s.value === type) ?? SLIDE_TYPES[0];
+  return SLIDE_TYPES.find(s => s.value === type) ?? SLIDE_TYPES[9];
+}
+
+function fmt(n) {
+  return n ? `₹${Number(n).toLocaleString('en-IN')}` : '';
+}
+
+// Fallback: build slides from profile data without AI
+function buildFallbackSlides(p) {
+  const margin = p.monthlyRevenue > 0 ? Math.round((p.monthlyProfit / p.monthlyRevenue) * 100) : 0;
+  return [
+    makeSlide('cover', {
+      title: p.businessName || 'My Business',
+      content: `${p.businessName} is a ${p.businessType || p.sector} venture founded by ${p.name} in ${p.location}${p.state ? ', ' + p.state : ''}, operating for ${p.yearsInBusiness} years.`,
+      bullets: [p.sector, p.registrationType, `${p.yearsInBusiness} years in business`].filter(Boolean),
+    }),
+    makeSlide('problem', {
+      title: 'The Market Gap',
+      content: `In India's ${p.sector} sector, micro-entrepreneurs like ${p.name} face structural barriers to formal financing and scale.`,
+      bullets: (p.challenges ?? []).slice(0, 3),
+    }),
+    makeSlide('solution', {
+      title: p.businessName,
+      content: p.unitEconomics?.productName
+        ? `${p.businessName} offers ${p.unitEconomics.productName} at ${fmt(p.unitEconomics.unitPrice)} per unit with ${fmt(p.unitEconomics.marginPerUnit)} margin per unit.`
+        : p.fundingPurpose || '',
+      bullets: p.unitEconomics?.productName ? [
+        `Product: ${p.unitEconomics.productName}`,
+        `Price: ${fmt(p.unitEconomics.unitPrice)} | Cost: ${fmt(p.unitEconomics.unitCost)}`,
+        `Daily volume: ${p.unitEconomics.dailyUnits || 0} units`,
+      ] : [],
+    }),
+    makeSlide('traction', {
+      title: `${fmt(p.monthlyRevenue)}/mo Revenue`,
+      content: `After ${p.yearsInBusiness} years, ${p.businessName} generates ${fmt(p.monthlyRevenue)} monthly revenue with a ${margin}% profit margin.`,
+      bullets: [
+        `Monthly Revenue: ${fmt(p.monthlyRevenue)}`,
+        `Monthly Profit: ${fmt(p.monthlyProfit)}`,
+        `Profit Margin: ${margin}%`,
+      ],
+    }),
+    makeSlide('financials', {
+      title: 'Unit Economics',
+      content: `Revenue ${fmt(p.monthlyRevenue)}/mo minus costs of ${fmt(p.monthlyCosts)}/mo yields ${fmt(p.monthlyProfit)} net profit at ${margin}% margin.`,
+      bullets: [
+        `Revenue: ${fmt(p.monthlyRevenue)}/mo`,
+        `Costs: ${fmt(p.monthlyCosts)}/mo`,
+        `Net Profit: ${fmt(p.monthlyProfit)}/mo (${margin}%)`,
+      ],
+    }),
+    makeSlide('team', {
+      title: p.name,
+      content: `${p.name} has been running ${p.businessName} for ${p.yearsInBusiness} years in ${p.location}. Registered as ${p.registrationType}.`,
+      bullets: [
+        `${p.yearsInBusiness} years entrepreneurial experience`,
+        `Agency Score: ${p.agencyScore?.percentage || 0}% — demonstrates business autonomy`,
+        p.registrationType || '',
+      ].filter(Boolean),
+    }),
+    makeSlide('ask', {
+      title: `Seeking ${fmt(p.fundingNeeded)}`,
+      content: `${p.businessName} is raising ${fmt(p.fundingNeeded)} to ${p.fundingPurpose}.`,
+      bullets: [
+        `Investment: ${fmt(p.fundingNeeded)}`,
+        `Use of funds: ${p.fundingPurpose}`,
+        ...(p.currentFundingSources ?? []).slice(0, 1).map(s => `Current: ${s}`),
+        p.growthPlan?.shortTerm ? `3-month goal: ${p.growthPlan.shortTerm}` : '',
+      ].filter(Boolean).slice(0, 4),
+    }),
+  ];
 }
 
 // Mini visual slide preview card
@@ -43,13 +111,12 @@ function SlideCard({ slide, index, active, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left rounded-xl overflow-hidden border-2 transition-all duration-150 group ${
+      className={`w-full text-left rounded-xl overflow-hidden border-2 transition-all duration-150 group relative ${
         active
           ? 'border-primary-500 shadow-lg shadow-primary-100 scale-[1.02]'
           : 'border-warm-200 hover:border-primary-300 hover:shadow-md'
       }`}
     >
-      {/* Slide header strip */}
       <div className={`bg-gradient-to-r ${t.gradient} px-3 pt-2.5 pb-1.5`}>
         <div className="flex items-center gap-1.5 mb-1">
           <t.icon size={11} className="text-white/80 shrink-0" />
@@ -57,7 +124,6 @@ function SlideCard({ slide, index, active, onClick }) {
         </div>
         <p className="text-white text-[11px] font-semibold leading-tight truncate">{slide.title || t.label}</p>
       </div>
-      {/* Content preview */}
       <div className="bg-white px-2.5 py-2 min-h-[36px]">
         {slide.content ? (
           <p className="text-[9px] text-warm-600 line-clamp-2 leading-relaxed">{slide.content}</p>
@@ -71,7 +137,6 @@ function SlideCard({ slide, index, active, onClick }) {
           <p className="text-[9px] text-warm-300 italic">{t.hint}</p>
         )}
       </div>
-      {/* Slide number badge */}
       <div className={`absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
         active ? 'bg-primary-500 text-white' : 'bg-black/25 text-white'
       }`}>
@@ -81,7 +146,7 @@ function SlideCard({ slide, index, active, onClick }) {
   );
 }
 
-// Live slide preview panel (shows how the slide looks when presented)
+// Live slide preview panel
 function SlidePreviewPane({ slide }) {
   if (!slide) return null;
   const t = getTypeInfo(slide.type);
@@ -89,20 +154,17 @@ function SlidePreviewPane({ slide }) {
 
   return (
     <div className={`rounded-2xl overflow-hidden shadow-xl bg-gradient-to-br ${t.gradient} flex flex-col`} style={{ aspectRatio: '16/9' }}>
-      {/* Header */}
       <div className="px-6 pt-6 pb-3 flex items-center gap-2.5 shrink-0">
         <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
           <t.icon size={14} className="text-white" />
         </div>
         <span className="text-white/70 text-xs font-bold uppercase tracking-widest">{t.label}</span>
       </div>
-      {/* Title */}
       <div className="px-6 pb-3 shrink-0">
         <h2 className="text-white font-black leading-tight" style={{ fontSize: 'clamp(16px, 3.5vw, 28px)' }}>
           {slide.title || t.label}
         </h2>
       </div>
-      {/* Body */}
       <div className="flex-1 mx-4 mb-4 bg-white/10 backdrop-blur-sm rounded-xl px-5 py-4 overflow-hidden">
         {slide.content && (
           <p className="text-white/90 leading-relaxed mb-3" style={{ fontSize: 'clamp(9px, 1.5vw, 13px)' }}>
@@ -127,18 +189,18 @@ function SlidePreviewPane({ slide }) {
   );
 }
 
-// Slide editor form
-function SlideEditor({ slide, onChange, onAIAssist, aiLoading }) {
+// Slide editor
+function SlideEditor({ slide, onChange, onAIAssist, aiLoading, hasProfile }) {
   const t = getTypeInfo(slide.type);
 
   const updateBullet = (i, val) => {
-    const bullets = [...(slide.bullets ?? ['', '', ''])];
+    const bullets = [...(slide.bullets ?? [])];
     bullets[i] = val;
     onChange({ ...slide, bullets });
   };
 
   const addBullet = () => onChange({ ...slide, bullets: [...(slide.bullets ?? []), ''] });
-  const removeBullet = i => onChange({ ...slide, bullets: slide.bullets.filter((_, idx) => idx !== i) });
+  const removeBullet = i => onChange({ ...slide, bullets: (slide.bullets ?? []).filter((_, idx) => idx !== i) });
 
   const inputClass = 'w-full border border-warm-200 rounded-lg px-3 py-2 text-sm text-warm-900 focus:outline-none focus:ring-2 focus:ring-primary-300 focus:border-transparent transition-all bg-white';
 
@@ -182,15 +244,16 @@ function SlideEditor({ slide, onChange, onAIAssist, aiLoading }) {
         />
       </div>
 
-      {/* Main content + AI assist */}
+      {/* Main content + AI Suggest button */}
       <div>
         <div className="flex items-center justify-between mb-1.5">
           <label className="text-xs font-bold text-warm-500 uppercase tracking-wider"><T>Main Content</T></label>
           {isApiKeyConfigured() && (
             <button
               onClick={onAIAssist}
-              disabled={aiLoading}
+              disabled={aiLoading || !hasProfile}
               className="flex items-center gap-1 text-[11px] text-primary-600 hover:text-primary-800 bg-primary-50 hover:bg-primary-100 border border-primary-200 px-2 py-1 rounded-lg font-medium transition-colors disabled:opacity-50"
+              title={!hasProfile ? 'Complete your profile first' : 'Regenerate this slide with AI using your profile data'}
             >
               {aiLoading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
               <T>AI Suggest</T>
@@ -230,10 +293,7 @@ function SlideEditor({ slide, onChange, onAIAssist, aiLoading }) {
                 placeholder={`Point ${i + 1}`}
                 className={`${inputClass} flex-1`}
               />
-              <button
-                onClick={() => removeBullet(i)}
-                className="p-1 text-warm-300 hover:text-red-400 transition-colors shrink-0 rounded"
-              >
+              <button onClick={() => removeBullet(i)} className="p-1 text-warm-300 hover:text-red-400 transition-colors shrink-0 rounded">
                 <Trash2 size={12} />
               </button>
             </div>
@@ -263,7 +323,6 @@ function PresentationModal({ slides, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/95 z-50 flex flex-col items-center justify-center p-4">
-      {/* Top bar */}
       <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-6 py-3 bg-black/40">
         <div className="flex items-center gap-2">
           <t.icon size={16} className="text-white/60" />
@@ -271,16 +330,12 @@ function PresentationModal({ slides, onClose }) {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-white/40 text-sm">{idx + 1} / {slides.length}</span>
-          <button
-            onClick={onClose}
-            className="text-white/60 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
-          >
+          <button onClick={onClose} className="text-white/60 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors">
             <X size={18} />
           </button>
         </div>
       </div>
 
-      {/* Slide */}
       <div className="w-full max-w-5xl">
         <div className={`bg-gradient-to-br ${t.gradient} rounded-3xl shadow-2xl overflow-hidden`} style={{ minHeight: '500px' }}>
           <div className="px-12 pt-14 pb-6">
@@ -293,9 +348,7 @@ function PresentationModal({ slides, onClose }) {
             <h2 className="text-5xl font-black text-white leading-tight">{slide?.title || t.label}</h2>
           </div>
           <div className="bg-white/10 backdrop-blur-sm mx-8 mb-10 rounded-2xl p-8">
-            {slide?.content && (
-              <p className="text-white text-xl leading-relaxed mb-6">{slide.content}</p>
-            )}
+            {slide?.content && <p className="text-white text-xl leading-relaxed mb-6">{slide.content}</p>}
             {bullets.length > 0 && (
               <ul className="space-y-4">
                 {bullets.map((b, i) => (
@@ -311,30 +364,16 @@ function PresentationModal({ slides, onClose }) {
             )}
           </div>
         </div>
-
-        {/* Navigation */}
         <div className="flex items-center justify-center gap-6 mt-6">
-          <button
-            onClick={() => setIdx(i => Math.max(0, i - 1))}
-            disabled={idx === 0}
-            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 disabled:opacity-30 text-white px-6 py-3 rounded-2xl transition-colors font-semibold"
-          >
+          <button onClick={() => setIdx(i => Math.max(0, i - 1))} disabled={idx === 0} className="flex items-center gap-2 bg-white/10 hover:bg-white/20 disabled:opacity-30 text-white px-6 py-3 rounded-2xl transition-colors font-semibold">
             <ChevronLeft size={20} /> <T>Prev</T>
           </button>
           <div className="flex gap-1.5 flex-wrap justify-center max-w-xs">
             {slides.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setIdx(i)}
-                className={`rounded-full transition-all ${i === idx ? 'bg-white w-6 h-2.5' : 'bg-white/35 w-2.5 h-2.5'}`}
-              />
+              <button key={i} onClick={() => setIdx(i)} className={`rounded-full transition-all ${i === idx ? 'bg-white w-6 h-2.5' : 'bg-white/35 w-2.5 h-2.5'}`} />
             ))}
           </div>
-          <button
-            onClick={() => setIdx(i => Math.min(slides.length - 1, i + 1))}
-            disabled={idx === slides.length - 1}
-            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 disabled:opacity-30 text-white px-6 py-3 rounded-2xl transition-colors font-semibold"
-          >
+          <button onClick={() => setIdx(i => Math.min(slides.length - 1, i + 1))} disabled={idx === slides.length - 1} className="flex items-center gap-2 bg-white/10 hover:bg-white/20 disabled:opacity-30 text-white px-6 py-3 rounded-2xl transition-colors font-semibold">
             <T>Next</T> <ChevronRight size={20} />
           </button>
         </div>
@@ -344,44 +383,85 @@ function PresentationModal({ slides, onClose }) {
   );
 }
 
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function PitchDeck() {
   const { user, userProfile } = useAuth();
   const [deckTitle, setDeckTitle] = useState('My Pitch Deck');
-  const [slides, setSlides] = useState([
-    makeSlide('cover'), makeSlide('problem'), makeSlide('solution'), makeSlide('ask'),
-  ]);
+  const [slides, setSlides] = useState([makeSlide('cover'), makeSlide('problem'), makeSlide('solution'), makeSlide('ask')]);
+  const [profile, setProfile] = useState(null);
   const [activeIdx, setActiveIdx] = useState(0);
   const [previewing, setPreviewing] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [savedState, setSavedState] = useState('idle'); // 'idle' | 'saving' | 'saved'
+  const [savedState, setSavedState] = useState('idle');
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [showAddPanel, setShowAddPanel] = useState(false);
   const autoSaveTimer = useRef(null);
 
-  // Load deck from Firestore
+  // ── Load deck + profile ──────────────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
-    getDoc(doc(db, 'pitchDecks', user.uid)).then(snap => {
-      if (snap.exists()) {
-        const data = snap.data();
+    Promise.all([
+      getDoc(doc(db, 'pitchDecks', user.uid)),
+      getDoc(doc(db, 'entrepreneurs', user.uid)),
+    ]).then(async ([deckSnap, profileSnap]) => {
+      const p = profileSnap.exists() ? profileSnap.data() : null;
+      if (p) setProfile(p);
+
+      if (deckSnap.exists()) {
+        const data = deckSnap.data();
         setDeckTitle(data.title ?? 'My Pitch Deck');
         setSlides(data.slides ?? slides);
+        setLoading(false);
+      } else if (p) {
+        // No saved deck — try AI generation
+        setLoading(false);
+        await runAIGeneration(p);
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     });
   }, [user?.uid]);
 
-  // Auto-save with 2.5s debounce
+  // ── AI deck generation ───────────────────────────────────────────────────
+  async function runAIGeneration(p) {
+    if (!isApiKeyConfigured()) {
+      // Fallback to data-populated slides without AI
+      const fb = buildFallbackSlides(p);
+      setSlides(fb);
+      setDeckTitle(p.businessName ? `${p.businessName} — Pitch Deck` : 'My Pitch Deck');
+      return;
+    }
+    setGenerating(true);
+    setGenerateError('');
+    const result = await generatePitchDeck(p);
+    if (result.success && result.data?.slides?.length) {
+      const aiSlides = result.data.slides.map(s => makeSlide(s.type, {
+        title: s.title || '',
+        content: s.content || '',
+        bullets: Array.isArray(s.bullets) ? s.bullets.filter(Boolean) : [],
+      }));
+      setSlides(aiSlides);
+      setDeckTitle(result.data.deckTitle || (p.businessName ? `${p.businessName} — Pitch Deck` : 'My Pitch Deck'));
+    } else {
+      // AI failed — use fallback
+      setSlides(buildFallbackSlides(p));
+      setDeckTitle(p.businessName ? `${p.businessName} — Pitch Deck` : 'My Pitch Deck');
+      if (result.error) setGenerateError(result.error);
+    }
+    setGenerating(false);
+  }
+
+  // ── Auto-save ────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (loading) return;
+    if (loading || generating) return;
     clearTimeout(autoSaveTimer.current);
     setSavedState('idle');
-    autoSaveTimer.current = setTimeout(() => {
-      saveToFirestore(true);
-    }, 2500);
+    autoSaveTimer.current = setTimeout(() => saveToFirestore(true), 2500);
     return () => clearTimeout(autoSaveTimer.current);
-  }, [slides, deckTitle, loading]);
+  }, [slides, deckTitle, loading, generating]);
 
   const activeSlide = slides[activeIdx];
 
@@ -402,8 +482,8 @@ export default function PitchDeck() {
     }
   }
 
-  const updateSlide = useCallback(updated =>
-    setSlides(ss => ss.map((s, i) => i === activeIdx ? updated : s)),
+  const updateSlide = useCallback(
+    updated => setSlides(ss => ss.map((s, i) => i === activeIdx ? updated : s)),
     [activeIdx]
   );
 
@@ -438,7 +518,7 @@ export default function PitchDeck() {
     else if (activeIdx === swap) setActiveIdx(idx);
   };
 
-  // Keyboard navigation for slides
+  // Keyboard navigation
   useEffect(() => {
     function onKey(e) {
       if (previewing) return;
@@ -450,33 +530,24 @@ export default function PitchDeck() {
     return () => window.removeEventListener('keydown', onKey);
   }, [slides.length, previewing]);
 
-  // AI assist for slide content
+  // ── Per-slide AI assist (profile-aware) ──────────────────────────────────
   async function handleAIAssist() {
-    if (!activeSlide || aiLoading) return;
+    if (!activeSlide || aiLoading || !profile) return;
     setAiLoading(true);
-    const slideInfo = getTypeInfo(activeSlide.type);
-    const prompt = `Generate concise pitch deck content for the "${activeSlide.title || slideInfo.label}" slide of a business pitch. The slide hint: "${slideInfo.hint}". Current title: "${activeSlide.title}". Give a 2-3 sentence main content paragraph and 3 key bullet points. Format: [CONTENT]: ... [BULLETS]: • ... • ... • ...`;
-    const result = await sendMessage(prompt);
-    if (result.success) {
-      const text = result.data;
-      const contentMatch = text.match(/\[CONTENT\]:\s*([\s\S]*?)(?=\[BULLETS\]|$)/);
-      const bulletsMatch = text.match(/\[BULLETS\]:\s*([\s\S]*?)$/);
-      const content = contentMatch ? contentMatch[1].trim() : text;
-      const bulletsRaw = bulletsMatch ? bulletsMatch[1].trim() : '';
-      const bullets = bulletsRaw
-        .split('\n')
-        .map(b => b.replace(/^[•\-\*]\s*/, '').trim())
-        .filter(Boolean)
-        .slice(0, 5);
+    const result = await generateSlideContent(profile, activeSlide.type, activeSlide.title);
+    if (result.success && result.data) {
       updateSlide({
         ...activeSlide,
-        content: content || activeSlide.content,
-        bullets: bullets.length > 0 ? bullets : activeSlide.bullets,
+        content: result.data.content || activeSlide.content,
+        bullets: Array.isArray(result.data.bullets) && result.data.bullets.length > 0
+          ? result.data.bullets.filter(Boolean)
+          : activeSlide.bullets,
       });
     }
     setAiLoading(false);
   }
 
+  // ── Loading / generating states ──────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -485,14 +556,36 @@ export default function PitchDeck() {
     );
   }
 
+  if (generating) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <div className="w-12 h-12 bg-primary-100 rounded-2xl flex items-center justify-center">
+          <Sparkles size={22} className="text-primary-500 animate-pulse" />
+        </div>
+        <div className="text-center">
+          <p className="text-warm-800 font-semibold text-lg">
+            <T>Building your pitch deck with AI…</T>
+          </p>
+          <p className="text-warm-400 text-sm mt-1">
+            <T>Using your profile data to craft investor-ready slides</T>
+          </p>
+        </div>
+        <div className="flex gap-1.5 mt-2">
+          {[0, 1, 2].map(i => (
+            <div key={i} className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   const saveButtonLabel = savedState === 'saving' ? 'Saving…' : savedState === 'saved' ? 'Saved' : 'Save';
 
   return (
     <div className="flex flex-col h-full gap-0">
-      {/* Page header */}
+      {/* Header */}
       <div className="relative overflow-hidden bg-gradient-to-r from-primary-700 via-primary-600 to-amber-500 rounded-2xl p-5 mb-5 shadow-lg shrink-0">
         <div className="absolute -top-8 -right-8 w-40 h-40 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 w-20 h-20 bg-amber-200/20 rounded-full blur-xl pointer-events-none" />
         <div className="relative z-10 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <Presentation size={20} className="text-white/80 shrink-0" />
@@ -504,23 +597,30 @@ export default function PitchDeck() {
             />
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-white/50 text-xs hidden sm:inline">
-              {slides.length} slide{slides.length !== 1 ? 's' : ''}
-            </span>
+            <span className="text-white/50 text-xs hidden sm:inline">{slides.length} slide{slides.length !== 1 ? 's' : ''}</span>
+            {isApiKeyConfigured() && profile && (
+              <button
+                onClick={() => runAIGeneration(profile)}
+                disabled={generating}
+                className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 border border-white/30 text-white text-sm font-semibold px-3 py-2 rounded-xl transition-all"
+                title="Regenerate all slides with AI"
+              >
+                <RefreshCw size={13} />
+                <span className="hidden sm:inline"><T>Regenerate</T></span>
+              </button>
+            )}
             <button
               onClick={() => setPreviewing(true)}
               className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 border border-white/30 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-all"
             >
-              <Eye size={14} />
+              <Presentation size={14} />
               <T>Present</T>
             </button>
             <button
               onClick={() => saveToFirestore(false)}
               disabled={savedState === 'saving'}
               className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl transition-all shadow-sm disabled:opacity-60 ${
-                savedState === 'saved'
-                  ? 'bg-green-500 text-white'
-                  : 'bg-white text-primary-700 hover:bg-primary-50'
+                savedState === 'saved' ? 'bg-green-500 text-white' : 'bg-white text-primary-700 hover:bg-primary-50'
               }`}
             >
               {savedState === 'saved' ? <Check size={14} /> : <Save size={14} />}
@@ -528,17 +628,24 @@ export default function PitchDeck() {
             </button>
           </div>
         </div>
+
+        {/* AI error */}
+        {generateError && (
+          <div className="mt-3 flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 text-white/70 text-xs">
+            <span>⚠ AI generation limited — showing data-filled slides instead.</span>
+            <button onClick={() => setGenerateError('')} className="ml-auto hover:text-white"><X size={12} /></button>
+          </div>
+        )}
+
         {/* Auto-save indicator */}
         {savedState === 'saving' && (
           <div className="absolute bottom-2 right-4 flex items-center gap-1.5 text-white/50 text-xs">
-            <Loader2 size={10} className="animate-spin" />
-            <T>Auto-saving…</T>
+            <Loader2 size={10} className="animate-spin" /><T>Auto-saving…</T>
           </div>
         )}
         {savedState === 'saved' && (
           <div className="absolute bottom-2 right-4 flex items-center gap-1.5 text-white/50 text-xs">
-            <Check size={10} />
-            <T>Auto-saved</T>
+            <Check size={10} /><T>Auto-saved</T>
           </div>
         )}
       </div>
@@ -560,7 +667,6 @@ export default function PitchDeck() {
             </button>
           </div>
 
-          {/* Add slide panel */}
           {showAddPanel && (
             <div className="bg-white rounded-xl border border-warm-200 shadow-lg p-2 space-y-1">
               <p className="text-[9px] font-bold text-warm-400 uppercase tracking-wider px-1 mb-1.5"><T>Add Slide</T></p>
@@ -579,47 +685,21 @@ export default function PitchDeck() {
             </div>
           )}
 
-          {/* Slide list */}
           <div className="flex-1 overflow-y-auto space-y-2 pr-0.5">
             {slides.map((slide, i) => (
               <div key={slide.id} className="relative group">
-                <SlideCard
-                  slide={slide}
-                  index={i}
-                  active={i === activeIdx}
-                  onClick={() => setActiveIdx(i)}
-                />
-                {/* Hover actions */}
+                <SlideCard slide={slide} index={i} active={i === activeIdx} onClick={() => setActiveIdx(i)} />
                 <div className="absolute top-1.5 right-1.5 hidden group-hover:flex items-center gap-0.5 bg-white/95 rounded-lg shadow border border-warm-100 p-0.5">
-                  <button
-                    onClick={() => moveSlide(i, -1)}
-                    disabled={i === 0}
-                    className="p-1 text-warm-400 hover:text-warm-700 disabled:opacity-25 rounded transition-colors"
-                    title="Move up"
-                  >
+                  <button onClick={() => moveSlide(i, -1)} disabled={i === 0} className="p-1 text-warm-400 hover:text-warm-700 disabled:opacity-25 rounded transition-colors" title="Move up">
                     <ArrowUp size={9} />
                   </button>
-                  <button
-                    onClick={() => moveSlide(i, 1)}
-                    disabled={i === slides.length - 1}
-                    className="p-1 text-warm-400 hover:text-warm-700 disabled:opacity-25 rounded transition-colors"
-                    title="Move down"
-                  >
+                  <button onClick={() => moveSlide(i, 1)} disabled={i === slides.length - 1} className="p-1 text-warm-400 hover:text-warm-700 disabled:opacity-25 rounded transition-colors" title="Move down">
                     <ArrowDown size={9} />
                   </button>
-                  <button
-                    onClick={() => duplicateSlide(i)}
-                    className="p-1 text-warm-400 hover:text-blue-500 rounded transition-colors"
-                    title="Duplicate"
-                  >
+                  <button onClick={() => duplicateSlide(i)} className="p-1 text-warm-400 hover:text-blue-500 rounded transition-colors" title="Duplicate">
                     <Copy size={9} />
                   </button>
-                  <button
-                    onClick={() => removeSlide(i)}
-                    disabled={slides.length === 1}
-                    className="p-1 text-warm-400 hover:text-red-500 disabled:opacity-25 rounded transition-colors"
-                    title="Delete"
-                  >
+                  <button onClick={() => removeSlide(i)} disabled={slides.length === 1} className="p-1 text-warm-400 hover:text-red-500 disabled:opacity-25 rounded transition-colors" title="Delete">
                     <Trash2 size={9} />
                   </button>
                 </div>
@@ -627,7 +707,6 @@ export default function PitchDeck() {
             ))}
           </div>
 
-          {/* Quick add bottom */}
           {!showAddPanel && (
             <button
               onClick={() => addSlide('custom')}
@@ -638,27 +717,18 @@ export default function PitchDeck() {
           )}
         </div>
 
-        {/* Center: Live preview pane */}
+        {/* Center: Preview */}
         <div className="flex-1 min-w-0 flex flex-col gap-3">
           <p className="text-[10px] font-bold text-warm-400 uppercase tracking-wider shrink-0"><T>Preview</T></p>
           <div className="flex-1 min-h-0 flex items-center">
             <div className="w-full">
               <SlidePreviewPane slide={activeSlide} />
-              {/* Slide navigation arrows */}
               <div className="flex items-center justify-center gap-4 mt-3">
-                <button
-                  onClick={() => setActiveIdx(i => Math.max(0, i - 1))}
-                  disabled={activeIdx === 0}
-                  className="p-1.5 rounded-lg text-warm-400 hover:text-warm-700 hover:bg-warm-100 disabled:opacity-30 transition-colors"
-                >
+                <button onClick={() => setActiveIdx(i => Math.max(0, i - 1))} disabled={activeIdx === 0} className="p-1.5 rounded-lg text-warm-400 hover:text-warm-700 hover:bg-warm-100 disabled:opacity-30 transition-colors">
                   <ChevronLeft size={16} />
                 </button>
                 <span className="text-xs text-warm-400 font-medium">{activeIdx + 1} / {slides.length}</span>
-                <button
-                  onClick={() => setActiveIdx(i => Math.min(slides.length - 1, i + 1))}
-                  disabled={activeIdx === slides.length - 1}
-                  className="p-1.5 rounded-lg text-warm-400 hover:text-warm-700 hover:bg-warm-100 disabled:opacity-30 transition-colors"
-                >
+                <button onClick={() => setActiveIdx(i => Math.min(slides.length - 1, i + 1))} disabled={activeIdx === slides.length - 1} className="p-1.5 rounded-lg text-warm-400 hover:text-warm-700 hover:bg-warm-100 disabled:opacity-30 transition-colors">
                   <ChevronRight size={16} />
                 </button>
               </div>
@@ -670,28 +740,25 @@ export default function PitchDeck() {
         <div className="w-80 shrink-0 flex flex-col gap-3 min-h-0">
           <div className="flex items-center justify-between shrink-0">
             <p className="text-[10px] font-bold text-warm-400 uppercase tracking-wider"><T>Edit Slide</T></p>
-            {activeSlide && (
-              <div className="flex items-center gap-1">
-                {(() => {
-                  const t = getTypeInfo(activeSlide.type);
-                  return (
-                    <div className={`flex items-center gap-1 px-2 py-1 rounded-lg bg-gradient-to-r ${t.gradient}`}>
-                      <t.icon size={10} className="text-white" />
-                      <span className="text-white text-[9px] font-bold">{t.label}</span>
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
+            {activeSlide && (() => {
+              const t = getTypeInfo(activeSlide.type);
+              return (
+                <div className={`flex items-center gap-1 px-2 py-1 rounded-lg bg-gradient-to-r ${t.gradient}`}>
+                  <t.icon size={10} className="text-white" />
+                  <span className="text-white text-[9px] font-bold">{t.label}</span>
+                </div>
+              );
+            })()}
           </div>
 
           <div className="flex-1 overflow-y-auto bg-warm-50 rounded-2xl border border-warm-200 p-4 shadow-sm">
             {activeSlide ? (
               <SlideEditor
                 slide={activeSlide}
-                onChange={updated => updateSlide(updated)}
+                onChange={updateSlide}
                 onAIAssist={handleAIAssist}
                 aiLoading={aiLoading}
+                hasProfile={!!profile}
               />
             ) : (
               <div className="h-full flex items-center justify-center text-warm-400 text-sm">

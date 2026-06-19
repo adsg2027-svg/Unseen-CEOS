@@ -3,7 +3,8 @@ import { db } from '../../firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { useFormSchema } from '../../context/FormSchemaContext';
 import { calculateAgencyScore } from '../../utils/agencyScore';
-import { Loader2 } from 'lucide-react';
+import { getStateFromCity } from '../../data/indianCities';
+import { Loader2, Lock } from 'lucide-react';
 import T from '../common/T';
 
 const AGENCY_PARAMS = [
@@ -82,7 +83,17 @@ export default function VentureForm({ user, onComplete, initialData }) {
     setFlatData(buildInitialFlat(ventureSchema, user, initialData));
   }, [ventureSchema]);
 
-  const handleFlat = e => setFlatData(p => ({ ...p, [e.target.name]: e.target.value }));
+  const handleFlat = e => {
+    const { name, value } = e.target;
+    setFlatData(p => {
+      const next = { ...p, [name]: value };
+      if (name === 'location') {
+        const state = getStateFromCity(value);
+        if (state) next.state = state;
+      }
+      return next;
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -135,6 +146,11 @@ export default function VentureForm({ user, onComplete, initialData }) {
     }
   };
 
+  const monthlyRevenue = Number(flatData.monthlyRevenue) || 0;
+  const monthlyCosts   = Number(flatData.monthlyCosts)   || 0;
+  const monthlyProfit  = monthlyRevenue - monthlyCosts;
+  const profitMargin   = monthlyRevenue > 0 ? ((monthlyProfit / monthlyRevenue) * 100).toFixed(1) : '0.0';
+
   const inputClass = 'w-full bg-white border border-warm-200 rounded-lg px-3 py-2 text-sm text-warm-900 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all';
   const labelClass = 'block text-xs font-semibold text-warm-700 mb-1';
 
@@ -175,6 +191,32 @@ export default function VentureForm({ user, onComplete, initialData }) {
                 />
               </div>
             ))}
+            {section === 'Financials' && (
+              <>
+                <div>
+                  <label className={labelClass}>
+                    <T>Monthly Profit (₹)</T>
+                    <Lock size={10} className="inline ml-1 text-warm-400" />
+                  </label>
+                  <input
+                    readOnly disabled
+                    value={monthlyProfit >= 0 ? `₹${monthlyProfit.toLocaleString('en-IN')}` : `-₹${Math.abs(monthlyProfit).toLocaleString('en-IN')}`}
+                    className={`${inputClass} bg-warm-50 text-warm-500 cursor-not-allowed`}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>
+                    <T>Profit Margin (%)</T>
+                    <Lock size={10} className="inline ml-1 text-warm-400" />
+                  </label>
+                  <input
+                    readOnly disabled
+                    value={`${profitMargin}%`}
+                    className={`${inputClass} bg-warm-50 text-warm-500 cursor-not-allowed`}
+                  />
+                </div>
+              </>
+            )}
           </div>
         </div>
       ))}
@@ -207,15 +249,30 @@ export default function VentureForm({ user, onComplete, initialData }) {
         </h3>
         <div className="grid grid-cols-1 gap-3">
           {[
-            { key: 'shortTerm',  labelKey: 'Short-term (3 months)'   },
-            { key: 'mediumTerm', labelKey: 'Mid-term (6–12 months)'  },
-            { key: 'longTerm',   labelKey: 'Long-term (2–3 years)'   },
-          ].map(({ key, labelKey }) => (
-            <div key={key}>
-              <label className={labelClass}><T>{labelKey}</T></label>
-              <input value={growthPlan[key]} onChange={e => setGrowth(p => ({ ...p, [key]: e.target.value }))} className={inputClass} />
-            </div>
-          ))}
+            { key: 'shortTerm',  labelKey: 'Short-term (3 months)'  },
+            { key: 'mediumTerm', labelKey: 'Mid-term (6–12 months)' },
+            { key: 'longTerm',   labelKey: 'Long-term (2–3 years)'  },
+          ].map(({ key, labelKey }) => {
+            const val = growthPlan[key] ?? '';
+            const minChars = 20;
+            const isShort = val.length > 0 && val.length < minChars;
+            return (
+              <div key={key}>
+                <div className="flex items-center justify-between mb-1">
+                  <label className={labelClass}><T>{labelKey}</T></label>
+                  <span className={`text-[10px] ${isShort ? 'text-red-400' : val.length >= minChars ? 'text-green-500' : 'text-warm-400'}`}>
+                    {val.length}/{minChars} <T>min chars</T>
+                  </span>
+                </div>
+                <textarea
+                  rows={2}
+                  value={val}
+                  onChange={e => setGrowth(p => ({ ...p, [key]: e.target.value }))}
+                  className={`${inputClass} ${isShort ? 'border-red-300 focus:ring-red-400' : ''}`}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
 

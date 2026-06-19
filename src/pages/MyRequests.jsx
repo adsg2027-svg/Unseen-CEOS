@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Send, Inbox, Clock, CheckCircle, XCircle, Loader, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Send, Inbox, Clock, CheckCircle, XCircle, Loader, AlertCircle, MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getVentureOutgoingRequests, getVentureIncomingConnections } from '../utils/connections';
 import T from '../components/common/T';
@@ -44,6 +45,7 @@ function timeAgo(ts) {
 
 export default function MyRequests() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [outgoing, setOutgoing] = useState([]);
   const [incoming, setIncoming] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -143,6 +145,15 @@ export default function MyRequests() {
                 <p className="text-sm text-warm-600 bg-warm-50 rounded-lg px-3 py-2 leading-relaxed">
                   "{req.message}"
                 </p>
+                {req.status === 'accepted' && (
+                  <button
+                    onClick={() => navigate(`/chat/${req.id}`)}
+                    className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:bg-primary-50 border border-primary-200 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    <MessageCircle size={13} />
+                    <T>Open Chat</T>
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -167,6 +178,15 @@ export default function MyRequests() {
                 <p className="text-sm text-warm-600 bg-warm-50 rounded-lg px-3 py-2 leading-relaxed">
                   "{conn.message}"
                 </p>
+                {conn.status === 'accepted' && (
+                  <button
+                    onClick={() => navigate(`/chat/${conn.id}`)}
+                    className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:bg-primary-50 border border-primary-200 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    <MessageCircle size={13} />
+                    <T>Open Chat</T>
+                  </button>
+                )}
               </div>
             ))}
           </div>

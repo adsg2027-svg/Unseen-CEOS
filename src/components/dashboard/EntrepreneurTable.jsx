@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, ArrowUpDown, ChevronUp, ChevronDown } from 'lucide-react';
+import { Star, ArrowUpDown, ChevronUp, ChevronDown, Loader2 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { formatINR, getScoreTierColor, getScoreTier } from '../../utils/agencyScore';
-import { SECTORS } from '../../data/mockData';
 import T from '../common/T';
 import { useT } from '../common/T';
 
 export default function EntrepreneurTable() {
-  const { filteredEntrepreneurs, filters, dispatch } = useData();
+  const { filteredEntrepreneurs, filters, dispatch, sectors, loading, toggleShortlist } = useData();
   const navigate = useNavigate();
   const [sortField, setSortField] = useState('name');
   const [sortDir, setSortDir] = useState('asc');
@@ -53,7 +52,7 @@ export default function EntrepreneurTable() {
           className="text-sm border border-warm-200 rounded-lg px-3 py-2 bg-white text-warm-700 outline-none focus:border-primary-300"
         >
           <option value="all">{tp('All Sectors')}</option>
-          {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
+          {sectors.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
 
         <select
@@ -132,7 +131,7 @@ export default function EntrepreneurTable() {
                   <td className="px-4 py-3 text-sm text-warm-700">{formatINR(e.fundingNeeded)}</td>
                   <td className="px-4 py-3 text-center">
                     <button
-                      onClick={(ev) => { ev.stopPropagation(); dispatch({ type: 'TOGGLE_SHORTLIST', payload: e.id }); }}
+                      onClick={(ev) => { ev.stopPropagation(); toggleShortlist(e.id); }}
                       className="p-1 hover:bg-warm-100 rounded transition-colors"
                     >
                       <Star size={16} className={e.isShortlisted ? 'fill-amber-400 text-amber-400' : 'text-warm-300'} />
@@ -165,7 +164,7 @@ export default function EntrepreneurTable() {
                   </div>
                 </div>
                 <button
-                  onClick={(ev) => { ev.stopPropagation(); dispatch({ type: 'TOGGLE_SHORTLIST', payload: e.id }); }}
+                  onClick={(ev) => { ev.stopPropagation(); toggleShortlist(e.id); }}
                 >
                   <Star size={16} className={e.isShortlisted ? 'fill-amber-400 text-amber-400' : 'text-warm-300'} />
                 </button>
@@ -182,7 +181,14 @@ export default function EntrepreneurTable() {
         })}
       </div>
 
-      {sorted.length === 0 && (
+      {loading && sorted.length === 0 && (
+        <div className="p-12 text-center text-warm-400">
+          <Loader2 className="w-6 h-6 animate-spin text-primary-400 mx-auto mb-2" />
+          <p className="text-sm"><T>Loading entrepreneurs…</T></p>
+        </div>
+      )}
+
+      {sorted.length === 0 && !loading && (
         <div className="p-12 text-center text-warm-400">
           <p className="text-sm"><T>No entrepreneurs match your filters.</T></p>
         </div>

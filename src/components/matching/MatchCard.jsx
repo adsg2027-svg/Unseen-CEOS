@@ -12,7 +12,7 @@ import T from '../common/T';
 
 export default function MatchCard({ entrepreneur }) {
   const navigate = useNavigate();
-  const { dispatch } = useData();
+  const { dispatch, toggleShortlist } = useData();
   const { user, userProfile } = useAuth();
   const tierColors = getScoreTierColor(entrepreneur.agencyScore.percentage);
   const initials = entrepreneur.name.split(' ').map(n => n[0]).join('');
@@ -105,7 +105,7 @@ export default function MatchCard({ entrepreneur }) {
             <T>View Profile</T>
           </button>
           <button
-            onClick={() => dispatch({ type: 'TOGGLE_SHORTLIST', payload: entrepreneur.id })}
+            onClick={() => toggleShortlist(entrepreneur.id)}
             className="flex items-center justify-center gap-1.5 text-xs font-medium text-warm-500 hover:bg-warm-50 py-2 px-3 rounded-lg transition-colors"
           >
             <Star size={12} className={entrepreneur.isShortlisted ? 'fill-amber-400 text-amber-400' : ''} />

@@ -1,11 +1,12 @@
-import { SECTORS } from '../../data/mockData';
 import { X } from 'lucide-react';
 import Button from '../common/Button';
 import T from '../common/T';
 import { useT } from '../common/T';
+import { useData } from '../../context/DataContext';
 
 export default function FilterPanel({ filters, onFilterChange, onReset }) {
   const tp = useT();
+  const { sectors } = useData();
 
   function toggleSector(sector) {
     const current = filters.sectors || [];
@@ -27,7 +28,7 @@ export default function FilterPanel({ filters, onFilterChange, onReset }) {
       <div className="mb-5">
         <p className="text-xs font-medium text-warm-600 mb-2 uppercase tracking-wider"><T>Sector</T></p>
         <div className="space-y-1.5">
-          {SECTORS.map(sector => (
+          {sectors.map(sector => (
             <label key={sector} className="flex items-center gap-2 text-sm text-warm-700 cursor-pointer">
               <input
                 type="checkbox"

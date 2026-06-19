@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { TrendingUp, Handshake, AlertCircle } from 'lucide-react';
+import { useLang } from '../context/LanguageContext';
+import { TrendingUp, Handshake, AlertCircle, Globe, ChevronDown } from 'lucide-react';
 import VentureForm from '../components/profile/VentureForm';
 import FunderForm from '../components/profile/FunderForm';
 import T from '../components/common/T';
@@ -25,11 +26,24 @@ const USER_TYPES = [
 
 export default function SelectRole() {
   const { saveUserType, user, userType: existingType } = useAuth();
+  const { lang, switchLang, t, LANGUAGES } = useLang();
   const navigate = useNavigate();
   const [userType, setUserType] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef(null);
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (langRef.current && !langRef.current.contains(e.target)) setLangOpen(false);
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const currentLang = LANGUAGES.find(l => l.code === lang);
 
   useEffect(() => {
     if (existingType) {
@@ -59,7 +73,35 @@ export default function SelectRole() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-amber-700 flex items-center justify-center p-4 py-12">
       <div className="w-full max-w-2xl">
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 relative">
+          {/* Language switcher */}
+          <div className="absolute top-0 right-0" ref={langRef}>
+            <button
+              onClick={() => setLangOpen(o => !o)}
+              className="flex items-center gap-1.5 text-white/70 hover:text-white hover:bg-white/10 rounded-lg px-2 py-1.5 transition-colors"
+            >
+              <Globe size={14} />
+              <span className="text-xs font-medium hidden sm:block">{currentLang?.nativeLabel}</span>
+              <ChevronDown size={10} className="hidden sm:block" />
+            </button>
+            {langOpen && (
+              <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-warm-200 rounded-xl shadow-lg py-1 z-50 max-h-64 overflow-y-auto text-left">
+                {LANGUAGES.map(l => (
+                  <button
+                    key={l.code}
+                    onClick={() => { switchLang(l.code); setLangOpen(false); }}
+                    className={`w-full flex items-center justify-between px-3 py-2 text-sm transition-colors ${
+                      lang === l.code ? 'bg-primary-50 text-primary-700 font-semibold' : 'text-warm-700 hover:bg-warm-50'
+                    }`}
+                  >
+                    <span>{l.nativeLabel}</span>
+                    <span className="text-xs text-warm-400">{l.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="inline-flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-lg">UC</span>

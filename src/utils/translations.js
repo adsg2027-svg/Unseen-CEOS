@@ -52,6 +52,7 @@ const T = {
     present: 'Present',
     search: 'Search entrepreneurs...',
     language: 'Language',
+    discover: 'Discover',
   },
   hi: {
     home: 'होम',
@@ -88,6 +89,7 @@ const T = {
     present: 'प्रस्तुत करें',
     search: 'उद्यमी खोजें...',
     language: 'भाषा',
+    discover: 'खोजें',
   },
   ta: {
     home: 'முகப்பு',
@@ -124,6 +126,7 @@ const T = {
     present: 'வழங்கு',
     search: 'தொழிலதிபர் தேடு...',
     language: 'மொழி',
+    discover: 'கண்டறி',
   },
   te: {
     home: 'హోమ్',
@@ -160,6 +163,7 @@ const T = {
     present: 'ప్రెజెంట్',
     search: 'వ్యవస్థాపకులను వెతకండి...',
     language: 'భాష',
+    discover: 'కనుగొనండి',
   },
   kn: {
     home: 'ಹೋಮ್',
@@ -196,6 +200,7 @@ const T = {
     present: 'ಪ್ರಸ್ತುತ',
     search: 'ಉದ್ಯಮಿಗಳನ್ನು ಹುಡುಕಿ...',
     language: 'ಭಾಷೆ',
+    discover: 'ಅನ್ವೇಷಿಸಿ',
   },
   mr: {
     home: 'होम',
@@ -232,6 +237,7 @@ const T = {
     present: 'सादर करा',
     search: 'उद्योजक शोधा...',
     language: 'भाषा',
+    discover: 'शोधा',
   },
   bn: {
     home: 'হোম',
@@ -268,6 +274,7 @@ const T = {
     present: 'উপস্থাপন করুন',
     search: 'উদ্যোক্তা খুঁজুন...',
     language: 'ভাষা',
+    discover: 'আবিষ্কার করুন',
   },
   gu: {
     home: 'હોમ',
@@ -304,6 +311,7 @@ const T = {
     present: 'રજૂ કરો',
     search: 'ઉદ્યોગસાહસિક શોધો...',
     language: 'ભાષા',
+    discover: 'શોધો',
   },
   ml: {
     home: 'ഹോം',
@@ -340,6 +348,7 @@ const T = {
     present: 'അവതരിപ്പിക്കുക',
     search: 'സംരംഭകരെ തിരയുക...',
     language: 'ഭാഷ',
+    discover: 'കണ്ടെത്തൽ',
   },
   pa: {
     home: 'ਹੋਮ',
@@ -376,6 +385,7 @@ const T = {
     present: 'ਪੇਸ਼ ਕਰੋ',
     search: 'ਉੱਦਮੀ ਲੱਭੋ...',
     language: 'ਭਾਸ਼ਾ',
+    discover: 'ਖੋਜੋ',
   },
 };
 
