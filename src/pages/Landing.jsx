@@ -216,11 +216,13 @@ export default function Landing() {
       {/* Stats strip */}
       <section className="py-10 bg-gradient-to-r from-primary-600 via-primary-500 to-amber-500">
         <div className="max-w-4xl mx-auto px-6">
-          <div className="grid grid-cols-3 divide-x divide-white/20 text-center text-white">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-y-6 md:divide-x divide-white/20 text-center text-white">
             {[
-              { value: '12+',  labelKey: 'Entrepreneurs Profiled' },
-              { value: '5',    labelKey: 'Agency Score Parameters' },
-              { value: '~₹1L', labelKey: 'Optimal Funding Amount' },
+              { value: '200+',  labelKey: 'Women Entrepreneurs Interviewed' },
+              { value: '23',    labelKey: 'Volunteers Led' },
+              { value: '5000+', labelKey: 'Entrepreneurs Profiled' },
+              { value: '5',     labelKey: 'Agency Score Parameters' },
+              { value: '70%',   labelKey: 'Lender-Matched' },
             ].map((s, i) => (
               <div key={i} className="px-4">
                 <p className="text-3xl md:text-4xl font-black">{s.value}</p>

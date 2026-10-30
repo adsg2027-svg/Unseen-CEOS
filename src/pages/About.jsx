@@ -51,6 +51,9 @@ export default function About() {
             <p className="text-sm text-warm-500 mt-4">
               <T>Across India's informal economy, millions of microbusinesses are legally registered in women's names — but most are not actually woman-led. The Unseen CEOs bridges this credibility gap for lenders, investors, and policymakers who want to fund genuine women-led ventures.</T>
             </p>
+            <p className="text-sm text-warm-500 mt-3">
+              <T>Piloted in partnership with Jagriti and mentored by Women's World Banking, the platform is built on 200+ field interviews with unbanked women entrepreneurs, led by a team of 23 volunteers. Its 5-factor ML tool serves 5,000+ users, with 70% matched to lenders.</T>
+            </p>
           </div>
         </Card>
       </div>
